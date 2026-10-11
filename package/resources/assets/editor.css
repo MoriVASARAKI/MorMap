@@ -1,0 +1,40 @@
+#mormap{--mm-ink:#183246;--mm-line:#d7e1e7;color:var(--mm-ink);font:14px system-ui,sans-serif;margin:12px;background:#fff;border:1px solid var(--mm-line);border-radius:8px;overflow:hidden}
+#mormap *{box-sizing:border-box}#mormap [hidden]{display:none!important}
+#mormap .mm-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:#f6f9fb;border-bottom:1px solid var(--mm-line)}
+#mormap .mm-brand{font-size:25px;font-weight:750;letter-spacing:-1px}#mormap .mm-version{font-size:11px;margin-left:12px;color:#627b8c}
+#mormap .mm-toolbar{display:flex;align-items:center;gap:6px;padding:10px;flex-wrap:wrap;border-bottom:1px solid var(--mm-line)}
+#mormap button,#mormap select,#mormap input{border:1px solid #c5d3dd;border-radius:5px;background:white;color:var(--mm-ink);padding:7px 10px;font:inherit}
+#mormap button{cursor:pointer}#mormap button:hover{background:#eaf3f7}#mormap button.active,#mormap button[aria-pressed=true],#mormap button.mm-primary{background:#186c85;color:white;border-color:#186c85}
+#mormap button:disabled{opacity:.45;cursor:default}#mormap .mm-divider{height:25px;width:1px;background:var(--mm-line);margin:0 3px}#mm-maps{max-width:180px}
+#mormap .mm-workspace{position:relative;display:block}#mormap .mm-canvas-wrap{position:relative;background:#e9eef2;overflow:hidden}
+#mm-canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;touch-action:none;outline:none;user-select:none}
+#mm-empty{position:absolute;top:46%;left:12%;right:12%;text-align:center;color:#6e8391;pointer-events:none}
+#mm-zoom{position:absolute;bottom:12px;left:12px;background:#fff;padding:5px 10px;border:1px solid var(--mm-line);border-radius:5px;font-size:12px;pointer-events:none}
+#mm-details-panel{position:absolute;right:12px;top:12px;width:270px;max-width:calc(100% - 24px);max-height:85%;overflow:auto;padding:18px;background:#fff;border:1px solid var(--mm-line);border-radius:8px;box-shadow:0 5px 20px #18324622;font-size:12px}
+#mm-details-close{float:right;padding:0 6px!important;font-size:18px!important}#mormap h4{font-size:13px;font-weight:700;margin:0 0 12px}
+#mm-inspector .mm-detail{margin-bottom:10px;overflow-wrap:anywhere}
+#mormap .mm-footer{display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap;padding:8px 12px;border-top:1px solid var(--mm-line);font-size:11px;color:#597386}
+#mormap .mm-legend{display:flex;gap:14px;flex-wrap:wrap}#mormap .mm-up{color:#087d3d}#mormap .mm-down{color:#c92636}#mormap .mm-disabled{color:#926209}#mormap .mm-unknown{color:#667581}
+#mormap #mm-refresh{font-size:11px;padding:4px 8px}#mm-message{padding:12px 18px;background:#fff0e8;color:#8c3424;white-space:pre-wrap}
+#mormap dialog{border:1px solid var(--mm-line);border-radius:9px;max-width:620px;width:95%;padding:24px;color:var(--mm-ink)}#mormap dialog::backdrop{background:#142d4266}#mormap dialog p{line-height:1.6}
+#mm-fields label{display:block;margin:14px 0 5px;font-weight:600}#mm-fields input,#mm-fields select{width:100%}#mm-fields small{display:block;margin-top:8px;color:#6e8391}
+#mormap .mm-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:22px}#mm-dialog-error{color:#b43030;margin-top:12px}
+#mormap .mm-node{cursor:move}#mormap .mm-anchor{cursor:crosshair}#mormap .mm-cable{cursor:pointer}#mormap .mm-handle{cursor:move}
+#mormap[data-mode="view"] .mm-node,#mormap[data-mode="view"] .mm-anchor{cursor:pointer}
+#mormap .mm-port-label{display:none;pointer-events:none}#mormap .mm-port-label.mm-visible{display:inline}
+@media(max-width:700px){#mormap .mm-header{gap:12px;align-items:start}#mm-state{font-size:11px}#mormap .mm-toolbar{gap:4px}#mormap button{padding:6px 8px}}
+#mormap .mm-toolbar{align-items:stretch;gap:8px;padding:10px 12px;background:#fbfcfd}
+#mormap .mm-tool-group{display:flex;flex-direction:column;gap:6px;border:1px solid #dce5eb;border-radius:7px;padding:7px 9px;background:#fff}
+#mormap .mm-group-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#758997;line-height:1}
+#mormap .mm-group-buttons{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+#mormap .mm-point-tool{font:600 17px ui-monospace,monospace;padding:5px 13px;min-width:38px}
+#mormap[data-read-only="true"] .mm-toolbar{justify-content:flex-end}
+#mormap #mm-message.mm-success{color:#176446;background:#edf8f1}
+
+.mm-workspaces{display:flex;gap:5px;padding:7px 14px;border-bottom:1px solid #d8e3ea;background:#f6f9fb}.mm-workspaces a{display:block;padding:7px 16px;border-radius:5px;color:#617988;font-size:12px;font-weight:600;text-decoration:none}.mm-workspaces a.active{color:#166a83;background:#e4f2f7}.mm-header .mm-workspaces{border:0;padding:0}
+.mm-dialog-handle{cursor:grab;user-select:none;touch-action:none;border-bottom:1px solid #d8e3ea;padding:0 0 13px;margin-top:0!important}.mm-dialog-handle:active{cursor:grabbing}.mm-dialog-handle::before{content:'⠿';color:#8da1af;margin-right:10px}.mm-dialog-handle:focus-visible{outline:2px solid #36a5c6;outline-offset:4px}
+#mormap dialog{max-height:calc(100vh - 32px);overflow:auto;inset:auto;margin:0;resize:both;min-width:min(360px,calc(100vw - 24px))}
+#mormap .mm-search-row{display:flex;align-items:stretch;max-width:460px;gap:0;margin:8px 0 14px}#mormap .mm-search-row input{min-width:0;flex:1;border-top-right-radius:0;border-bottom-right-radius:0;margin:0}#mormap .mm-search-row button{flex-shrink:0;border-left:0;border-top-left-radius:0;border-bottom-left-radius:0}
+#mormap .mm-image-options{display:grid;grid-template-columns:1fr 120px;gap:12px;align-items:center;margin:10px 0}#mormap .mm-image-options img{width:120px;height:80px;object-fit:contain;background:#f1f6f8;border-radius:5px}#mormap .mm-binding-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:220px;overflow:auto;padding-right:4px}#mormap .mm-binding-grid label{margin:4px 0 2px;font-size:11px}#mormap .mm-binding-grid select{font-size:11px;width:100%;padding:5px}
+#mormap #mm-message.mm-warning{background:#fff3d9;color:#885913}
+.mm-context-menu{position:fixed;z-index:2147483000;min-width:180px;padding:5px;background:#fff;border:1px solid #c9d9e3;border-radius:7px;box-shadow:0 8px 28px #15354a33}.mm-context-menu button{display:block;width:100%;background:none;border:0;padding:9px 14px;text-align:left;color:#274657;font:13px system-ui;cursor:pointer}.mm-context-menu button:hover{background:#edf5f8}.mm-context-menu button:disabled{color:#9aa9b1;cursor:default}

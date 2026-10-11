@@ -1,0 +1,41 @@
+{
+    "name": "morivasaraki/mormap",
+    "description": "MorMap: image-based port anchors and editable orthogonal cable maps inside LibreNMS",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "librenms/plugin-interfaces": "^1.0",
+        "ext-dom": "*",
+        "ext-fileinfo": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "PortMap\\LibreNMS\\": "package/src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "PortMap\\LibreNMS\\PortMapServiceProvider"
+            ]
+        }
+    },
+    "authors": [
+        {
+            "name": "Morteza VASARAKI",
+            "homepage": "https://github.com/MoriVASARAKI",
+            "role": "Developer"
+        }
+    ],
+    "replace": {
+        "portmap/librenms-portmap": "<=0.9.9"
+    },
+    "keywords": [
+        "librenms",
+        "network",
+        "topology",
+        "physical-map",
+        "mormap"
+    ]
+}

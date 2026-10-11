@@ -1,0 +1,81 @@
+/* Canonical infrastructure identities and view projections. No duplicate inventory. */
+(function(root){
+'use strict';
+const P=root.MorMapPath||(typeof require==='function'?require('./physical-trace.js'):null);
+const T=root.MorMapTopology||(typeof require==='function'?require('./topology.js'):null);
+const deviceRef=d=>d.device_id?'lnms:device:'+Number(d.device_id):d.object_id;
+const portRef=p=>p.port_id?'lnms:port:'+Number(p.port_id):p.port_ref;
+const values=value=>Object.values(value||{});
+function scope(graph,workspace='physical'){return workspace==='logical'&&graph?.schema>=2?{...graph,connections:graph.logical_connections||{},disconnected:graph.logical_disconnected||{},topology:'logical'}:graph;}
+function connection(graph,ref,workspace='physical'){return values(scope(graph,workspace)?.connections).find(c=>c.source===ref||c.target===ref)||null;}
+function samePair(c,a,b){return c.source===a&&c.target===b||c.source===b&&c.target===a;}
+function logical(map,graph,geometry,syncProfiles=true){
+ if(!graph)return map;if(syncProfiles)T?.applyProfiles(map,graph,'logical',geometry);map.infrastructure=graph;map.infrastructure_revision=graph.revision;
+ graph=scope(graph,'logical');
+ for(const n of map.nodes)n.object_id=deviceRef(n);for(const a of map.anchors)a.port_ref=portRef(a);
+ const byRef=new Map();for(const a of map.anchors)if(!byRef.has(a.port_ref))byRef.set(a.port_ref,a);
+ const removed=new Set(map.disconnect||[]),present=new Set(),result=[];
+ for(const l of map.links){const a=map.anchors.find(p=>p.id===l.source),b=map.anchors.find(p=>p.id===l.target);if(!a||!b)continue;
+  const shared=values(graph.connections).find(c=>samePair(c,a.port_ref,b.port_ref));
+  if(shared&&!removed.has(shared.id)){l.connection_id=shared.id;apply(l,shared);present.add(shared.id);result.push(l);}
+  else if(!l.connection_id&&!values(graph.disconnected).some(c=>samePair(c,a.port_ref,b.port_ref))){l.relationship_warning=!!(connection(graph,a.port_ref)||connection(graph,b.port_ref));result.push(l);}
+ }
+ for(const c of values(graph.connections)){const a=byRef.get(c.source),b=byRef.get(c.target);if(!a||!b||present.has(c.id)||removed.has(c.id))continue;
+  const start=geometry.point(map.nodes.find(n=>n.id===a.node_id),a),end=geometry.point(map.nodes.find(n=>n.id===b.node_id),b);
+  const l={id:c.id,connection_id:c.id,source:a.id,target:b.id,points:geometry.shortestRoute(start,end)};apply(l,c);result.push(l);
+ }map.links=result;return map;
+}
+function physical(map,graph,syncProfiles=true){
+ if(!graph)return map;if(syncProfiles)T?.applyProfiles(map,graph,'physical');map.infrastructure=graph;map.infrastructure_revision=graph.revision;map.cables??=[];
+ const existing=new Map(map.equipment.flatMap(e=>(e.ports||[]).map(p=>[portRef(p),{item:e,port:p}])));
+ const available=ref=>existing.get(ref)||(()=>{const peer=graph.ports?.[ref]?.peer_id,at=existing.get(peer);return at&&!at.item.hidden_ports?.includes(ref)&&graph.ports?.[peer]?.peer_id===ref?at:null;})();
+ for(const c of values(graph.connections))if(!map.disconnect?.includes(c.id)&&available(c.source)&&available(c.target))for(const ref of [c.source,c.target])if(!existing.has(ref)){const at=available(ref),record=graph.ports[ref],p={port_id:null,port_ref:ref,label:record.label,x:at.port.x,y:at.port.y,comment:''};at.item.ports.push(p);existing.set(ref,{item:at.item,port:p});}
+ const points=new Set();for(const e of map.equipment){e.object_id=deviceRef(e);for(const p of e.ports){p.port_ref=portRef(p);points.add(p.port_ref);}}
+ const removed=new Set(map.disconnect||[]),present=new Set(),result=[];
+ for(const l of map.cables){const c=values(graph.connections).find(c=>samePair(c,l.source,l.target));
+  if(c&&!removed.has(c.id)){l.connection_id=c.id;apply(l,c);present.add(c.id);result.push(l);}else if(!l.connection_id&&!values(graph.disconnected).some(c=>samePair(c,l.source,l.target)))result.push(l);
+ }
+ for(const c of values(graph.connections))if(points.has(c.source)&&points.has(c.target)&&!present.has(c.id)&&!removed.has(c.id)){const l={id:c.id,connection_id:c.id,source:c.source,target:c.target,paths:{}};apply(l,c);result.push(l);}
+ map.cables=result;return map;
+}
+function apply(link,c){link.comment=c.comment||'';link.name=c.name||'';link.kind=c.kind||'cable';if(c.media)link.media=JSON.parse(JSON.stringify(c.media));if(c.color)link.color=c.color;else delete link.color;delete link.relationship_warning;}
+// Keep the existing monitoring contract, backed by the ordered physical resolver.
+function trace(graph,a,b){
+ let g=graph||{ports:{},connections:{},devices:{}};
+ if(b&&!(g._pathIndex?(g._pathIndex.adjacent.get(a)||[]).some(e=>e.type==='cable'&&e.to===b):values(g.connections).some(c=>samePair(c,a,b))))g={...g,connections:{...g.connections,'draft-path':{id:'draft-path',source:a,target:b}}};
+ const path=P.trace(g,a),ports=path.allRefs.filter(r=>g.ports?.[r]?.source==='librenms'||r?.startsWith('lnms:port:')).map(r=>Number(g.ports?.[r]?.port_id||r.split(':').at(-1)));
+ return {ports:[...new Set(ports)],warning:path.warning};
+}
+function cableState(link,graph,ports,devices,ends){
+ const refs=ends||[link.source,link.target],path=trace(graph,refs[0],refs[1]);let warning=!!link.relationship_warning||path.warning||path.ports.length<2,down=false;
+ const details=[];
+ for(const id of path.ports){const p=ports.get(Number(id)),owner=p&&devices.get(Number(p.device_id)),registered=graph?.ports?.['lnms:port:'+id];
+  if(!p||!owner||!owner.last_polled||String(owner.last_polled).startsWith('0000-')||owner.disabled===true||owner.disabled===1||owner.disabled==='1'){warning=true;details.push('Missing or disabled monitoring');continue;}
+  if(registered&&registered.device_ref!=='lnms:device:'+Number(p.device_id)){warning=true;details.push('Port mapping mismatch');continue;}
+  if(owner.status===0||owner.status==='0'||owner.status===false){down=true;details.push('Device unreachable');continue;}
+  const oper=String(p.ifOperStatus).toLowerCase(),admin=String(p.ifAdminStatus).toLowerCase();
+  if(oper==='down'&&admin!=='down'){down=true;details.push('Interface down');}
+  else if(oper!=='up'||admin==='down'||!(owner.status===1||owner.status==='1'||owner.status===true)){warning=true;details.push(admin==='down'?'Administratively disabled':'Incomplete interface state');}
+ }
+ if(!path.ports.length)return {key:'unknown',color:'#8593a1',label:'Unmonitored',detail:link.kind==='stack'?'No monitored stack-port state is available.':'No monitored endpoint state is available.'};
+ const key=down?'down':warning?'warning':'up';return {key,color:({up:'#08a84f',warning:'#df8a16',down:'#d93443'})[key],label:({up:'Healthy',warning:'Warning / unverified',down:'Down'})[key],detail:[...new Set(details)].join('; ')|| (warning?'No complete monitored path':'Monitored endpoints are UP')};
+}
+// Rebase undo onto the current graph without reverting monitoring/inventory.
+function restoreHistory(before,after,graph,workspace){
+ const currentGraph=graph;graph=scope(graph,workspace);
+ const physicalView=workspace==='physical',key=physicalView?'cables':'links';
+ const pair=(map,l)=>physicalView?[l.source,l.target]:[portRef(map.anchors.find(a=>a.id===l.source)||{}),portRef(map.anchors.find(a=>a.id===l.target)||{})];
+ const refs=new Set(physicalView?after.equipment.flatMap(e=>(e.ports||[]).map(portRef)):after.anchors.map(portRef));
+ const removed=new Set((after.disconnect||[]).filter(id=>graph?.connections?.[id]));
+ for(const old of before[key]||[]){const [a,b]=pair(before,old),shared=values(graph?.connections).find(c=>samePair(c,a,b));
+  if(shared&&refs.has(a)&&refs.has(b)&&!(after[key]||[]).some(l=>{const ends=pair(after,l);return samePair(shared,...ends);}))removed.add(shared.id);
+ }
+ for(const l of after[key]||[]){const ends=pair(after,l),shared=values(graph?.connections).find(c=>samePair(c,...ends));
+  if(shared){l.connection_id=shared.id;removed.delete(shared.id);}else delete l.connection_id;
+ }
+ for(const d of after[physicalView?'equipment':'nodes']||[]){const p=T.profile(graph,d);if(p?.revision)d.profile_revision=p.revision;}after.disconnect=[...removed];after.infrastructure=currentGraph;after.infrastructure_revision=currentGraph?.revision;return after;
+}
+
+const api={scope,restoreHistory,deviceRef,portRef,connection,samePair,logical,physical,trace,cableState,values};
+if(typeof module!=='undefined')module.exports=api;else root.MorMapInfrastructure=api;
+})(typeof window==='undefined'?globalThis:window);
