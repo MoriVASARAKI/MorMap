@@ -14,6 +14,28 @@ final class PortMapServiceProvider extends ServiceProvider
     public const SLUG = 'portmap';
     public const VERSION = '1.0.0';
 
+    /**
+     * A route cache created before MorMap was installed does not contain the
+     * package routes. Let Laravel load routes normally for this request,
+     * without touching the application's cache files or requiring a second
+     * installation command.
+     */
+    public function register(): void
+    {
+        if (! $this->app->routesAreCached()) {
+            return;
+        }
+
+        $cachedRoutes = @file_get_contents($this->app->getCachedRoutesPath());
+
+        if ($cachedRoutes === false
+            || ! str_contains($cachedRoutes, "'mormap.home'")
+            || ! str_contains($cachedRoutes, "'mormap.asset'")
+            || ! str_contains($cachedRoutes, "'mormap.published'")) {
+            $this->app->instance('routes.cached', false);
+        }
+    }
+
     public function boot(PluginManagerInterface $manager): void
     {
         $base = dirname(__DIR__);
