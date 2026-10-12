@@ -23,7 +23,7 @@ final class UndoStore
         }
         $writes['undo/'.$token.'.json']=['before'=>$before,'after'=>$after,'context'=>$context,'created_at'=>time()];
         (new WorkspaceTransaction($this->root))->apply($writes,$deletes,$blobs);
-        // History in each editor is capped at five. Expire inaccessible backup records.
+        // Editors cap their session history. Expire inaccessible backup records after seven days.
         foreach(glob($this->root.'/undo/*.json')?:[] as $file)if(filemtime($file)<time()-86400*7)unlink($file);
         return $token;
     }

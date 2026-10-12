@@ -75,7 +75,7 @@ function pointerMove(event){if(S.cableRoute&&!S.drag){S.cableRoute.cursor=routeP
  renderCanvas();return true;
 }
 function endDrag(cancel){const d=S.drag;if(!d||!['cable-segment','cable-bend','cable-info','physical-port'].includes(d.type))return false;S.drag=null;S.cableGuides=[];
- if(cancel)S.map=d.before;else if(JSON.stringify(S.map)!==JSON.stringify(d.before)){S.undo.push(d.before);if(S.undo.length>5)S.undo.shift();S.redo=[];S.dirty=true;}renderAll();return true;
+ if(cancel)S.map=d.before;else if(JSON.stringify(S.map)!==JSON.stringify(d.before)){S.undo.push(d.before);if(S.undo.length>20)S.undo.shift();S.redo=[];S.dirty=true;}renderAll();return true;
 }
 
 function formatCable(c){lastPress=null;const context=key(c);modal('Format Cable',el=>CC.cableFormat(el,{connector:style(c),format:format(c),color:c.color,statusColor:status(c).color,label:hint(c)}),controls=>{const v=controls.value();mutate(()=>{if(style(c)!==v.connector)setPath(c,G.connectorRoute(position(c.source),position(c.target),v.connector));c.connectors??={};c.connectors[context]=v.connector;c.formats??={};lastPress=null;c.formats[context]=v.format;if(v.color)c.color=v.color;else delete c.color;S.cableSelected=c.id;S.selected=null;S.multi=[];S.paintType='line';});});}

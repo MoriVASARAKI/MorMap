@@ -79,3 +79,23 @@
 :is(#mormap,#mormap-physical).mw-workbench [aria-label=Share] .mw-labelled-command:before{width:15px;height:15px}
 
 .mm-port-tooltip{position:fixed;z-index:10020;width:max-content;max-width:min(440px,calc(100vw - 16px));max-height:min(380px,calc(100vh - 16px));overflow:auto;background:#fff;color:#233f51;border:1px solid #aec4d2;border-radius:7px;box-shadow:0 5px 22px #19384926;padding:10px 13px;font:12px/1.65 Arial,sans-serif;white-space:pre-line;overflow-wrap:anywhere;user-select:text}.mm-port-tooltip[hidden]{display:none}.mm-port-tooltip strong{display:block;font-size:12px;line-height:1.5;margin-bottom:5px}.mm-port-discovery{border-top:1px solid #dce5ed;padding-top:6px;margin-top:6px}
+
+/* Published snapshot, including LibreNMS Notes dashboard iframe. */
+#mormap.mw-workbench[data-read-only="true"] .mm-chrome,
+#mormap.mw-workbench[data-read-only="true"] .mm-toolbar,
+#mormap.mw-workbench[data-read-only="true"] .mw-ribbon,
+#mormap.mw-workbench[data-read-only="true"] .mw-commandbar,
+#mormap.mw-workbench[data-read-only="true"] .mw-outline,
+#mormap.mw-workbench[data-read-only="true"] .mm-footer,
+#mormap.mw-workbench[data-read-only="true"] #mm-details-panel,
+#mormap-physical.mw-workbench[data-read-only="true"] .mm-chrome,
+#mormap-physical.mw-workbench[data-read-only="true"] .mp-toolbar,
+#mormap-physical.mw-workbench[data-read-only="true"] .mw-ribbon,
+#mormap-physical.mw-workbench[data-read-only="true"] .mw-commandbar,
+#mormap-physical.mw-workbench[data-read-only="true"] .mp-explorer,
+#mormap-physical.mw-workbench[data-read-only="true"] .mp-footer,
+#mormap-physical.mw-workbench[data-read-only="true"] #mp-inspector{display:none!important}
+#mormap.mw-workbench[data-read-only="true"] .mm-workspace,
+#mormap-physical.mw-workbench[data-read-only="true"] .mp-workspace{height:85vh!important;min-height:340px!important;max-height:none!important}
+#mormap.mw-workbench[data-read-only="true"] .mm-canvas-wrap,
+#mormap-physical.mw-workbench[data-read-only="true"] .mp-stage{flex:1 1 auto!important;width:100%!important}

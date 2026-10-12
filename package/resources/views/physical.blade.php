@@ -1,6 +1,8 @@
 @extends('layouts.librenmsv1')
 @section('content')
 <style>.mormap-starting{visibility:hidden}</style>
+
+
 <link rel="stylesheet" href="{{ route('mormap.asset', ['file'=>'chrome.css']) }}?v={{ $mormapVersion }}">
 
 <link rel="stylesheet" href="{{ route('mormap.asset', ['file' => 'editor.css']) }}?v={{ $mormapVersion }}">

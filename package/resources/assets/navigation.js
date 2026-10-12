@@ -26,7 +26,7 @@ function draw(items){
             let url;try{url=new URL(item.url,window.location.href);}catch(e){continue;}
             if(url.origin!==window.location.origin)continue;
             const li=document.createElement('li'),link=document.createElement('a');li.dataset.mormapNavigation='true';
-            link.href=url.href;link.textContent=item.name;li.append(link);menu.append(li);
+            link.href=url.href;const mark=document.createElement('img');mark.src=script?.dataset.iconUrl||script?.dataset.logoUrl;mark.alt='';mark.width=18;mark.height=18;mark.style.cssText='object-fit:contain;vertical-align:middle;margin-right:7px';link.append(mark,document.createTextNode(item.name));li.append(link);menu.append(li);
         }
     }
     window.MorMapNavigation={found:true};return true;

@@ -205,7 +205,54 @@ final class InfrastructureStore
             $store=$this->mapStore($workspace);$old=$store->read($id);if(($old['revision']??0)!==$expected)throw new \UnexpectedValueException('Map changed in another tab. Reload before saving.');
             $original=$graph;$connections=&$graph[self::connectionKey($workspace)];$disconnected=&$graph[self::disconnectedKey($workspace)];$map['id']=$id;$points=$this->registerView($graph,$workspace,$map);
             $oldPoints=array_merge($this->viewPoints($workspace,$old),array_values($points));$allowed=[];foreach($connections as $c)if(in_array($c['source'],$oldPoints,true)&&in_array($c['target'],$oldPoints,true))$allowed[$c['id']]=true;
-            foreach($map['disconnect']??[] as $connection){if(!isset($allowed[$connection]))throw new \InvalidArgumentException('The disconnected cable is not present in this saved view.');$disconnected[$connection]=$connections[$connection];unset($connections[$connection]);}
+            // A cable removed together with its port/device may no longer be in the draft.
+            // Reconcile saved cable identities as well as explicit disconnect requests.
+            $linkKey=$workspace==='logical'?'links':'cables';
+            $remaining=[];
+            foreach($map[$linkKey]??[] as $link){
+                if($workspace==='logical'){
+                    $lookup=array_column($map['anchors']??[],null,'id');
+                    $a=isset($lookup[$link['source']])?self::portRef($lookup[$link['source']]):null;
+                    $b=isset($lookup[$link['target']])?self::portRef($lookup[$link['target']]):null;
+                }else{$a=$link['source']??null;$b=$link['target']??null;}
+                if($a&&$b)$remaining[self::connectionId($a,$b)]=true;
+            }
+            $removedFromOld=[];$previous=[];
+            if($workspace==='logical')$previous=array_column($old['anchors']??[],null,'id');
+            foreach($old[$linkKey]??[] as $link){
+                $a=$workspace==='logical'?(isset($previous[$link['source']])?self::portRef($previous[$link['source']]):null):($link['source']??null);
+                $b=$workspace==='logical'?(isset($previous[$link['target']])?self::portRef($previous[$link['target']]):null):($link['target']??null);
+                if(!$a||!$b)continue;
+                $cid=self::connectionId($a,$b);
+                if(isset($connections[$cid])&&!isset($remaining[$cid]))$removedFromOld[$cid]=true;
+            }
+            $removals=array_unique(array_merge($map['disconnect']??[],array_keys(array_diff_key($removedFromOld,$remaining))));
+            foreach($removals as $connection){
+                if(!isset($allowed[$connection])){
+                    // Recovery for an old orphan: a placed endpoint is enough to request
+                    // disconnection of its shared relationship.
+                    $edge=$connections[$connection]??null;
+                    if(!$edge||(!in_array($edge['source'],array_values($points),true)&&!in_array($edge['target'],array_values($points),true)))
+                        throw new \InvalidArgumentException('The disconnected cable is not associated with this view.');
+                }
+                if(!isset($connections[$connection]))continue;
+                // An explicit cable deletion disconnects the shared relationship. An
+                // incidental removal with a device/port preserves other saved drawings.
+                $explicit=in_array($connection,$map['disconnect']??[],true);
+                $referencedElsewhere=false;
+                foreach($explicit?[]:$store->all() as $summary){
+                    if($summary['id']===$id)continue;
+                    $another=$store->read($summary['id']);
+                    $anchors=$workspace==='logical'?array_column($another['anchors']??[],null,'id'):[];
+                    foreach($another[$linkKey]??[] as $link){
+                        $a=$workspace==='logical'?(isset($anchors[$link['source']])?self::portRef($anchors[$link['source']]):null):($link['source']??null);
+                        $b=$workspace==='logical'?(isset($anchors[$link['target']])?self::portRef($anchors[$link['target']]):null):($link['target']??null);
+                        if($a&&$b&&self::connectionId($a,$b)===$connection){$referencedElsewhere=true;break 2;}
+                    }
+                }
+                if($referencedElsewhere)continue;
+                $disconnected[$connection]=$connections[$connection];unset($connections[$connection]);
+            }
             $linkKey=$workspace==='logical'?'links':'cables';$seen=[];$map[$linkKey]??=[];
             foreach($map[$linkKey] as &$link){$a=$points[$link['source']]??null;$b=$points[$link['target']]??null;if(!$a||!$b)throw new \InvalidArgumentException('Cable endpoints must be placed in this view.');
                 $expectedId=self::connectionId($a,$b);if(isset($link['connection_id'])&&$link['connection_id']!==$expectedId)throw new \InvalidArgumentException('Connection identity does not match its ports.');

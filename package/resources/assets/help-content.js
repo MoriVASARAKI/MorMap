@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 const data={
-  "version": "1.0.0",
+  "version": "1.0.2",
   "groups": {
     "start": {
       "en": "Get started",
@@ -1811,7 +1811,7 @@ const data={
             ]
           },
           {
-            "note": "Remote connections are saved immediately and participate in the same five-action Undo / Redo history. A conflicting newer connection is reported instead of overwritten."
+            "note": "Remote connections are saved immediately and participate in the same twenty-action Undo / Redo history. A conflicting newer connection is reported instead of overwritten."
           }
         ]
       },
@@ -1836,7 +1836,7 @@ const data={
             ]
           },
           {
-            "note": "Les liaisons distantes sont enregistrées immédiatement et participent au même historique de cinq actions Undo / Redo. Une connexion plus récente en conflit est signalée et conservée."
+            "note": "Les liaisons distantes sont enregistrées immédiatement et participent au même historique de vingt actions Undo / Redo. Une connexion plus récente en conflit est signalée et conservée."
           }
         ]
       }
@@ -2179,7 +2179,7 @@ const data={
                 ],
                 [
                   "Undo / Redo",
-                  "Reverses or reapplies the last five actions in this workspace session, including deletion. Save retains history; reloading the page starts a new session."
+                  "Reverses or reapplies the last twenty actions in this workspace session, including deletion. Save retains history; reloading the page starts a new session."
                 ],
                 [
                   "Rename",
@@ -2187,7 +2187,7 @@ const data={
                 ],
                 [
                   "Delete selection · trash",
-                  "Removes selected items. Disconnecting/deleting a cable affects the shared connection when saved."
+                  "Removes selected items. Deleting a device or connection point preserves cables still drawn in another saved map. Explicitly deleting or disconnecting a cable removes that shared connection from all maps in the same topology when saved. Undo restores the cable; Save applies the restoration."
                 ],
                 [
                   "Delete map / Delete plan · document with X",
@@ -2223,7 +2223,7 @@ const data={
                 ],
                 [
                   "Undo / Redo",
-                  "Annule ou rétablit les cinq dernières actions de la session, y compris les suppressions. Save conserve l’historique ; recharger la page démarre une nouvelle session."
+                  "Annule ou rétablit les vingt dernières actions de la session, y compris les suppressions. Save conserve l’historique ; recharger la page démarre une nouvelle session."
                 ],
                 [
                   "Rename",
@@ -2231,7 +2231,7 @@ const data={
                 ],
                 [
                   "Delete selection · corbeille",
-                  "Retire les éléments sélectionnés. La suppression ou déconnexion d’un câble modifie la connexion partagée lors de l’enregistrement."
+                  "Retire les éléments sélectionnés. Supprimer un équipement ou un point conserve les câbles encore dessinés dans une autre carte enregistrée. Supprimer ou déconnecter explicitement un câble retire sa connexion partagée de toutes les cartes de la même topologie lors de l’enregistrement. Undo restaure le câble ; Save applique la restauration."
                 ],
                 [
                   "Delete map / Delete plan · document avec X",
