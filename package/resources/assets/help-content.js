@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 const data={
-  "version": "1.0.4",
+  "version": "1.0.5",
   "groups": {
     "start": {
       "en": "Get started",

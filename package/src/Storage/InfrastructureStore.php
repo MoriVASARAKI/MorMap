@@ -106,6 +106,62 @@ final class InfrastructureStore
         unlink($file);
     }
     public function snapshot(): array {return $this->locked(fn($graph)=>$graph);}
+    /**
+     * Retire connections only after a complete, authoritative inventory lookup.
+     * Missing drawings, equal names, disabled devices and link-down states are
+     * deliberately not evidence of deletion. Call under the workspace lock.
+     */
+    public function reconcileInventory(int $expected, array $devices, array $ports): array
+    {
+        return $this->locked(function ($graph) use ($expected, $devices, $ports) {
+            if ($graph['revision'] !== $expected) {
+                throw new \UnexpectedValueException('Infrastructure changed during inventory verification. Reload and try again.');
+            }
+            $issues = [];
+            foreach ($graph['ports'] as $ref => $port) {
+                $owner = $port['device_ref'] ?? '';
+                if (str_starts_with($owner, 'lnms:device:') && !isset($devices[(int) substr($owner, 12)])) {
+                    $issues[$ref] = 'LibreNMS device no longer exists.';
+                } elseif (str_starts_with($ref, 'lnms:port:')) {
+                    $id = (int) substr($ref, 10);
+                    if (!isset($ports[$id])) $issues[$ref] = 'LibreNMS interface was deleted or no longer exists.';
+                    elseif ('lnms:device:' . (int) $ports[$id] !== $owner) $issues[$ref] = 'LibreNMS interface belongs to a different device.';
+                }
+            }
+            $original = $graph;
+            if ($issues || isset($graph['inventory_issues'])) $graph['inventory_issues'] = $issues;
+            // A drawing of a removed interface is still an engineer's record of
+            // the wiring. Preserve it with an inventory warning. Automatic
+            // retirement is reserved for orphaned, invalid endpoints.
+            $placed = [];
+            if ($issues) foreach (['logical', 'physical'] as $workspace) {
+                $store = $this->mapStore($workspace);
+                foreach ($store->all() as $summary) {
+                    $map = $store->read($summary['id']);
+                    if ($map) foreach ($this->viewPoints($workspace, $map) as $ref) $placed[$ref] = true;
+                }
+            }
+            foreach (['logical', 'physical'] as $workspace) {
+                $key = self::connectionKey($workspace);
+                $removed = self::disconnectedKey($workspace);
+                foreach ($graph[$key] as $id => $connection) {
+                    $reasons = array_intersect_key($issues, array_flip([$connection['source'], $connection['target']]));
+                    if (!$reasons || !array_diff_key($reasons, $placed)) continue;
+                    // Tombstones prevent saved maps and published snapshots from
+                    // silently bringing a retired connection back on their next load.
+                    $graph[$removed][$id] = $connection + ['retired_inventory' => $reasons];
+                    unset($graph[$key][$id]);
+                }
+            }
+            if ($graph !== $original) {
+                $backup = $this->dir . '/graph-before-inventory-' . $original['revision'] . '.json';
+                if (!is_file($backup)) $this->writeJson($backup, $original);
+                $graph['revision']++;
+                $this->writeJson($this->dir . '/graph.json', $graph);
+            }
+            return $graph;
+        });
+    }
     public function decorate(array $map): array
     {
         $g=$this->snapshot();$map['infrastructure_revision']=$g['revision'];$map['infrastructure']=$g;return $map;
@@ -174,6 +230,7 @@ final class InfrastructureStore
     {
         $connections=&$g[self::connectionKey($workspace)];$disconnected=&$g[self::disconnectedKey($workspace)];
         if($a===$b||!isset($g['ports'][$a],$g['ports'][$b]))throw new \InvalidArgumentException('Choose two distinct known ports.');
+        if(isset($g['inventory_issues'][$a])||isset($g['inventory_issues'][$b]))throw new \InvalidArgumentException('A connection endpoint no longer matches LibreNMS inventory. Choose its current interface.');
         // Occupied ports, passive loops and stack-role mismatches are design
         // advisories in the UI. Preserve the engineer's connections on save/Undo.
         $id=self::connectionId($a,$b);

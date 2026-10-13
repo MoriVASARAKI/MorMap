@@ -7,6 +7,8 @@ const Q=window.MorMapSelection,FP=window.MorMapFormatPainter,T=window.MorMapTopo
 let gridEnabled=true,snapEnabled=true,snapGuides=[],infrastructureNotice=false;
 const base=root.dataset.base.replace(/\/$/,''), NS='http://www.w3.org/2000/svg';
 const readOnly=root.dataset.readOnly==='true';
+const embedded=readOnly&&new URLSearchParams(location.search).get('mormap_embed')==='1';
+if(embedded)gridEnabled=false;
 let mapLoadTicket=0;
 let lastCablePress=null,lastCableDetour=0,routeDraft=null;
 let map=null, mode=readOnly?'view':'select', selection=null, pending=null, dirty=false, history=[], future=[], statuses=new Map(), deviceStatuses=new Map(), portLabels=new Map();
@@ -267,7 +269,7 @@ function dialog(title,build,onSubmit,compact=false){
 function field(container,label,input){input.setAttribute('aria-label',label);container.append(html('label',label),input);return input;}
 function textDialog(title,value,submit){let input;dialog(title,c=>{input=field(c,'Name',html('input',null,{value,required:true,maxLength:120}));},()=>submit(input.value.trim()||'Untitled'));}
 async function listMaps(){const maps=await api('/maps');const s=$('mm-maps');s.replaceChildren(html('option','Choose map…',{value:''}));for(const m of maps)s.append(html('option',m.name,{value:m.id}));if(map)s.value=map.id;return maps;}
-function loadMap(data,keepHistory=false){requestGeneration++;root.dataset.mapId=data.id;if(!readOnly){workspaceMemory.set({map:data.id});$('mm-maps').value=data.id;}map=I.logical(data,data.infrastructure,G,!readOnly);infrastructureNotice=false;map.canvas=D.canvas(data.canvas);dirty=false;selection=null;pending=null;routeDraft=null;placePort=null;hoveredAnchor=null;if(!keepHistory){history=history.filter(e=>e.__undo);future=[];}statuses.clear();deviceStatuses.clear();allPortsByDevice.clear();portCache.clear();fitPage();refreshStatus();const warning=I.warningText(map,'logical');if(warning)message(warning,false,true);else if(data.infrastructure?.migration_conflicts?.some(c=>c.workspace==='logical'&&c.map_id===data.id))message('This legacy map contains unresolved cable references. Review its connection details.',false,true);}
+function loadMap(data,keepHistory=false){requestGeneration++;root.dataset.mapId=data.id;if(!readOnly){workspaceMemory.set({map:data.id});$('mm-maps').value=data.id;}map=I.logical(data,data.infrastructure,G,!readOnly);infrastructureNotice=false;map.canvas=D.canvas(data.canvas);dirty=false;selection=null;pending=null;routeDraft=null;placePort=null;hoveredAnchor=null;if(!keepHistory){history=history.filter(e=>e.__undo);future=[];}statuses.clear();deviceStatuses.clear();allPortsByDevice.clear();portCache.clear();if(embedded)fit();else fitPage();refreshStatus();const warning=I.warningText(map,'logical');if(warning)message(warning,false,true);else if(data.infrastructure?.migration_conflicts?.some(c=>c.workspace==='logical'&&c.map_id===data.id))message('This legacy map contains unresolved cable references. Review its connection details.',false,true);}
 async function openMap(id){if(!id)return;if(dirty&&!confirm('Discard unsaved changes?')){$('mm-maps').value=map.id;return;}const ticket=++mapLoadTicket,data=await api('/maps/'+id);if(ticket!==mapLoadTicket)return;message();loadMap(data);}
 async function save(){if(readOnly||!map||saving||!dirty)return;saving=true;state();const snapshot=G.copy(map),payload=G.copy(map);delete payload.infrastructure;try{const result=await api('/maps/'+map.id,{method:'PUT',body:payload});if(map.id===snapshot.id){const edited=JSON.stringify(map)!==JSON.stringify(snapshot);if(!edited){map=I.logical(result,result.infrastructure,G);dirty=false;}else{map.revision=result.revision;map.infrastructure=result.infrastructure;map.infrastructure_revision=result.infrastructure_revision;for(const l of map.links){const saved=result.links.find(v=>v.id===l.id);if(saved?.connection_id)l.connection_id=saved.connection_id;}map.disconnect=(map.disconnect||[]).filter(id=>!(snapshot.disconnect||[]).includes(id));}}const warning=I.warningText(map,'logical');message('Saved. '+(warning||'Logical connections and physical cables are independent.'),!warning,!!warning);await listMaps();}catch(e){fail(e);}finally{saving=false;render();}}
 
@@ -277,6 +279,17 @@ function fit(){
     const pts=map.nodes.flatMap(n=>[{x:n.x,y:n.y-30},{x:n.x+n.w,y:n.y+n.h}]).concat(map.links.flatMap(l=>l.points));
     const minX=Math.min(...pts.map(p=>p.x))-70,minY=Math.min(...pts.map(p=>p.y))-70,maxX=Math.max(...pts.map(p=>p.x))+70,maxY=Math.max(...pts.map(p=>p.y))+70;
     const scale=Math.max((maxX-minX)/w,(maxY-minY)/h,.25);view={x:(minX+maxX-w*scale)/2,y:(minY+maxY-h*scale)/2,w:w*scale,h:h*scale};render();
+    if(embedded){
+        // Labels have a constant screen size. Include their rendered extents,
+        // not just the equipment rectangles, when fitting a dashboard widget.
+        for(let attempt=0;attempt<10;attempt++){
+            const boxes=[...svg.querySelectorAll('[data-layer="devices"],[data-layer="device-labels"],[data-layer="cables"]')].map(g=>g.getBBox()).filter(b=>b.width||b.height);
+            if(!boxes.length)break;
+            const pad=16*view.w/w,x=Math.min(...boxes.map(b=>b.x))-pad,y=Math.min(...boxes.map(b=>b.y))-pad,right=Math.max(...boxes.map(b=>b.x+b.width))+pad,bottom=Math.max(...boxes.map(b=>b.y+b.height))+pad;
+            if(x>=view.x&&y>=view.y&&right<=view.x+view.w&&bottom<=view.y+view.h)break;
+            const ratio=Math.max((right-x)/w,(bottom-y)/h);view={x:(x+right-w*ratio)/2,y:(y+bottom-h*ratio)/2,w:w*ratio,h:h*ratio};render();
+        }
+    }
 }
 async function refreshStatus(){
     if(!map)return;
@@ -287,10 +300,10 @@ async function refreshStatus(){
         const data=await api('/status',{method:'POST',body:{ids,device_ids}});
         if(generation!==requestGeneration)return;
         if(!Array.isArray(data.ports)||!Array.isArray(data.devices))throw new Error('Status response is outdated. Refresh this page after the upgrade.');
-        statuses=new Map(data.ports.map(p=>[Number(p.port_id),p]));deviceStatuses=new Map(data.devices.map(d=>[Number(d.device_id),d]));
+        const firstStatus=!deviceStatuses.size;statuses=new Map(data.ports.map(p=>[Number(p.port_id),p]));deviceStatuses=new Map(data.devices.map(d=>[Number(d.device_id),d]));
         if(data.infrastructure&&!drag){if(!dirty){I.logical(map,data.infrastructure,G,!readOnly);infrastructureNotice=false;}else if(data.infrastructure.revision!==map.infrastructure_revision&&!infrastructureNotice){message('Shared infrastructure changed in another view. Reload before saving.',false,true);infrastructureNotice=true;}}
         allPortsByDevice=new Map();for(const p of data.ports){const id=Number(p.device_id);if(!allPortsByDevice.has(id))allPortsByDevice.set(id,[]);allPortsByDevice.get(id).push(p);}
-        $('mm-status-time').textContent='Latest polled data · fetched '+new Date().toLocaleTimeString();if(!drag)render();
+        $('mm-status-time').textContent='Latest polled data · fetched '+new Date().toLocaleTimeString();if(!drag){if(embedded&&firstStatus)fit();else render();}
     }catch(e){
         if(generation===requestGeneration){statuses.clear();deviceStatuses.clear();$('mm-status-time').textContent='Status unavailable — '+e.message;if(!drag)render();}
     }finally{
@@ -592,7 +605,7 @@ window.addEventListener('keydown',e=>{if(e.defaultPrevented)return;
     if(e.key==='Delete'&&root.contains(document.activeElement))removeSelection();
     if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&['v','x','c'].includes(e.key.toLowerCase())){e.preventDefault();setMode({v:'select',x:'anchor',c:'cable'}[e.key.toLowerCase()]);}
 });
-new ResizeObserver(()=>{if(pageFitted){view=D.pageView(map?.canvas,svg.clientWidth||1920,svg.clientHeight||1080);}else{view.h=view.w*(svg.clientHeight||1080)/(svg.clientWidth||1920);}render();}).observe(svg);
+new ResizeObserver(()=>{if(embedded&&map){fit();return;}if(pageFitted){view=D.pageView(map?.canvas,svg.clientWidth||1920,svg.clientHeight||1080);}else{view.h=view.w*(svg.clientHeight||1080)/(svg.clientWidth||1920);}render();}).observe(svg);
 UI?.makeDraggable($('mm-help'),$('mm-help-title'));
 if(!readOnly)UI?.makeDraggable($('mm-dialog'),$('mm-dialog-title'));
 setInterval(()=>{if(!document.hidden)refreshStatus();},30000);

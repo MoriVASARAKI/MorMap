@@ -85,4 +85,12 @@
 #mormap.mw-workbench[data-read-only="true"] .mw-outline,
 #mormap-physical.mw-workbench[data-read-only="true"] .mm-chrome,
 #mormap-physical.mw-workbench[data-read-only="true"] .mp-explorer{display:none!important}
-:is(#mormap,#mormap-physical).mw-workbench[data-embedded="true"] :is(.mm-workspace,.mp-workspace){min-height:120px}
+/* Dashboard iframe only: retain the live map, with no editor/viewer chrome. */
+html.mormap-dashboard-embed,html.mormap-dashboard-embed body{margin:0!important;padding:0!important;height:100%;overflow:hidden}
+html.mormap-dashboard-embed :is(#page-wrapper,.container-fluid){margin:0!important;padding:0!important;min-height:0!important}
+:is(#mormap,#mormap-physical).mw-workbench[data-embedded="true"]{width:100%;margin:0!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+:is(#mormap,#mormap-physical).mw-workbench[data-embedded="true"] :is(.mm-chrome,.mw-ribbon,.mw-outline,.mw-notifications,.mm-footer,.mp-footer,.mp-address,.mp-explorer,#mm-details-panel,#mp-inspector,#mm-zoom,.mp-canvas-footer,#mp-show-tree,.mm-panel-tab){display:none!important}
+:is(#mormap,#mormap-physical).mw-workbench[data-embedded="true"] :is(.mm-workspace,.mp-workspace){min-height:0!important;grid-template-columns:minmax(0,1fr)!important;gap:0!important;border:0!important}
+:is(#mormap,#mormap-physical).mw-workbench[data-embedded="true"] :is(.mm-canvas-wrap,.mp-stage){width:100%;min-width:0;min-height:0!important;border:0!important;background:#f8fafb}
+:is(#mormap,#mormap-physical).mw-workbench[data-embedded="true"] :is(#mm-canvas,#mp-canvas){width:100%!important;height:100%!important;min-height:0!important;aspect-ratio:auto!important}
+:is(#mormap,#mormap-physical).mw-workbench[data-embedded="true"] svg>[data-layer="page"],:is(#mormap,#mormap-physical).mw-workbench[data-embedded="true"] svg>[data-output="omit"]{fill:#f8fafb;stroke:none}

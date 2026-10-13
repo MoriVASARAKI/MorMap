@@ -22,6 +22,7 @@ function stackWarning(c,graph){const a=graph.ports?.[c.source],b=graph.ports?.[c
 function warnings(graph,refs){
  if(!graph)return [];const wanted=refs?new Set(refs):null,adj=(graph._pathIndex||P.index(graph)).adjacent,out=[];
  const relevant=r=>!wanted||wanted.has(r),name=r=>[graph.devices?.[graph.ports?.[r]?.device_ref]?.name,graph.ports?.[r]?.label||r].filter(Boolean).join(' / ');
+ for(const [ref,reason] of Object.entries(graph.inventory_issues||{}))if(relevant(ref))out.push(`${name(ref)}: ${reason} Review its interface binding; the saved drawing is retained.`);
  for(const [ref,edges] of adj){const count=edges.filter(e=>e.type==='cable').length;if(count>1&&relevant(ref))out.push(`Port ${name(ref)} has ${count} ${graph.topology==='logical'?'logical connections':'physical cables'}. All connections are retained; connectivity is ambiguous.`);}
  const parent=new Map(),cycles=[];const find=r=>{let q=r;while(parent.has(q))q=parent.get(q);while(parent.has(r)){const n=parent.get(r);parent.set(r,q);r=n;}return q;};
  const join=(a,b)=>{const x=find(a),y=find(b);if(x===y)cycles.push(a);else parent.set(x,y);};

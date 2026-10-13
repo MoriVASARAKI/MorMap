@@ -12,7 +12,7 @@ use PortMap\LibreNMS\Hooks\PortMapMenu;
 final class PortMapServiceProvider extends ServiceProvider
 {
     public const SLUG = 'portmap';
-    public const VERSION = '1.0.4';
+    public const VERSION = '1.0.5';
 
     /**
      * A route cache created before MorMap was installed does not contain the
@@ -22,9 +22,9 @@ final class PortMapServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->callAfterResolving('translator', function ($translator): void {
-            $translator->addLines(['widgets.mormap.title' => 'MorMap'], $translator->getLocale());
-        });
+        // MorMapWidgetController::getTitle() supplies our widget title. Adding
+        // a line to the host's unloaded "widgets" group marks that whole group
+        // as loaded in Laravel and prevents its normal translations loading.
 
         if (! $this->app->routesAreCached()) {
             return;
