@@ -7,18 +7,18 @@ root.addEventListener('mormap:select-mode',()=>{painter.cancel();adding=false;st
 function currentFormat(asset){return formatDrafts.get(asset.id)||asset.appearance||{};}
 function paintTarget(asset){return asset?{object:asset,format:{type:'object',style:FP.appearance(currentFormat(asset))}}:null;}
 function setFormatDraft(id,style){const base=assets.find(a=>a.id===id);if(JSON.stringify(FP.appearance(base.appearance))===JSON.stringify(style))formatDrafts.delete(id);else formatDrafts.set(id,G.copy(style));}
-function stageFormat(id,style){const asset=assets.find(a=>a.id===id);formatUndo.push({id,before:FP.appearance(currentFormat(asset)),after:G.copy(style)});if(formatUndo.length>5)formatUndo.shift();formatRedo.length=0;setFormatDraft(id,style);catalogue();render();state();}
+function stageFormat(id,style){const asset=assets.find(a=>a.id===id);formatUndo.push({id,before:FP.appearance(currentFormat(asset)),after:G.copy(style)});if(formatUndo.length>50)formatUndo.shift();formatRedo.length=0;setFormatDraft(id,style);catalogue();render();state();}
 function assetSnapshot(){return {__asset:true,id:selected?.id||null,ports:G.copy(ports),name:$('ml-name').value,formats:G.copy([...formatDrafts])};}
-function checkpointAsset(before=assetSnapshot()){formatUndo.push(before);if(formatUndo.length>5)formatUndo.shift();formatRedo.length=0;}
-function recordServerUndo(token){if(!token)return;formatUndo.push({__undo:token});if(formatUndo.length>5)formatUndo.shift();formatRedo.length=0;state();}
+function checkpointAsset(before=assetSnapshot()){formatUndo.push(before);if(formatUndo.length>50)formatUndo.shift();formatRedo.length=0;}
+function recordServerUndo(token){if(!token)return;formatUndo.push({__undo:token});if(formatUndo.length>50)formatUndo.shift();formatRedo.length=0;state();}
 function clearAsset(){selected=null;ports=[];active=null;dirty=false;adding=false;$('ml-export').hidden=true;$('ml-title').textContent='Choose an asset';$('ml-name').value='';$('ml-canvas').replaceChildren();$('ml-ports').replaceChildren();catalogue();state();}
 async function formatHistory(redo=false){
  if(saving)return;const from=redo?formatRedo:formatUndo,to=redo?formatUndo:formatRedo,item=from.at(-1);if(!item)return;
- if(item.__undo){saving=true;state();try{const result=await api('/undo',{method:'POST',body:{token:item.__undo}});from.pop();to.push({__undo:result.undo_token});if(to.length>5)to.shift();await load();const asset=assets.find(a=>a.id===result.context?.asset_id);dirty=false;if(asset)choose(asset);else clearAsset();message('Undo / Redo applied.',true);}catch(e){message(e.message);}finally{saving=false;state();}return;}
+ if(item.__undo){saving=true;state();try{const result=await api('/undo',{method:'POST',body:{token:item.__undo}});from.pop();to.push({__undo:result.undo_token});if(to.length>50)to.shift();await load();const asset=assets.find(a=>a.id===result.context?.asset_id);dirty=false;if(asset)choose(asset);else clearAsset();message('Undo / Redo applied.',true);}catch(e){message(e.message);}finally{saving=false;state();}return;}
  if(item.__asset){const asset=assets.find(a=>a.id===item.id);if(!asset){message('Restore the deleted asset before undoing its changes.');return;}
   to.push(selected?.id===item.id?assetSnapshot():{__asset:true,id:asset.id,ports:G.copy(asset.ports||[]),name:asset.name,formats:G.copy([...formatDrafts])});from.pop();dirty=false;choose(asset);ports=G.copy(item.ports);$('ml-name').value=item.name;formatDrafts.clear();for(const [id,style]of item.formats)if(assets.some(a=>a.id===id))setFormatDraft(id,style);dirty=JSON.stringify(ports)!==JSON.stringify(asset.ports||[])||item.name!==asset.name;
  }else{if(!assets.some(a=>a.id===item.id)){message('Restore the asset before undoing its format.');return;}from.pop();to.push(item);setFormatDraft(item.id,redo?item.after:item.before);}
- if(to.length>5)to.shift();catalogue();render();rows();state();
+ if(to.length>50)to.shift();catalogue();render();rows();state();
 }
 const h=(tag,text,props={})=>{const e=document.createElement(tag);if(text!==null)e.textContent=text;Object.assign(e,props);return window.MorMapUI.numberInput(e);};
 const s=(tag,attrs={},text)=>{const e=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,String(v));if(text)e.textContent=text;$('ml-canvas').append(e);return e;};

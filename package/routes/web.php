@@ -5,6 +5,11 @@ use PortMap\LibreNMS\Http\PortMapController;
 use PortMap\LibreNMS\Http\PublishedMapController;
 use PortMap\LibreNMS\Http\PhysicalMapController;
 use PortMap\LibreNMS\Http\InfrastructureController;
+use PortMap\LibreNMS\Http\MorMapWidgetController;
+// LibreNMS discovers dashboard widgets by this exact, unnested prefix.
+Route::prefix('ajax/dash')->middleware(['web', 'auth'])->group(function () {
+    Route::post('mormap', MorMapWidgetController::class)->name('mormap.widget');
+});
 Route::middleware(['web', 'auth'])->group(function () {
     Route::get('/plugin/portmap', [PortMapController::class, 'home'])->name('portmap.home');
     Route::prefix('/plugin/mormap')->middleware(\PortMap\LibreNMS\Http\WorkspaceMiddleware::class)->name('mormap.')->group(function () {

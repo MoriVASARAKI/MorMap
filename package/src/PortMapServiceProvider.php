@@ -12,7 +12,7 @@ use PortMap\LibreNMS\Hooks\PortMapMenu;
 final class PortMapServiceProvider extends ServiceProvider
 {
     public const SLUG = 'portmap';
-    public const VERSION = '1.0.2';
+    public const VERSION = '1.0.3';
 
     /**
      * A route cache created before MorMap was installed does not contain the
@@ -22,6 +22,10 @@ final class PortMapServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->callAfterResolving('translator', function ($translator): void {
+            $translator->addLines(['widgets.mormap.title' => 'MorMap'], $translator->getLocale());
+        });
+
         if (! $this->app->routesAreCached()) {
             return;
         }
@@ -31,7 +35,8 @@ final class PortMapServiceProvider extends ServiceProvider
         if ($cachedRoutes === false
             || ! str_contains($cachedRoutes, "'mormap.home'")
             || ! str_contains($cachedRoutes, "'mormap.asset'")
-            || ! str_contains($cachedRoutes, "'mormap.published'")) {
+            || ! str_contains($cachedRoutes, "'mormap.published'")
+            || ! str_contains($cachedRoutes, "'mormap.widget'")) {
             $this->app->instance('routes.cached', false);
         }
     }

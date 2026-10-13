@@ -20,13 +20,12 @@ function draw(items){
     for(const e of menu.querySelectorAll('[data-mormap-navigation]'))e.remove();
     if(items.length){
         const separator=document.createElement('li');separator.className='divider';separator.setAttribute('role','separator');separator.dataset.mormapNavigation='true';menu.append(separator);
-        const header=document.createElement('li');header.className='dropdown-header';const logo=document.createElement('img');logo.src=script?.dataset.logoUrl||endpoint.replace(/\/published$/, '/assets/mormap-logo.svg');logo.alt='MorMap';logo.style.width='120px';logo.style.height='40px';logo.style.objectFit='contain';header.append(logo);header.dataset.mormapNavigation='true';menu.append(header);
         for(const item of items){
             if(!item||typeof item.name!=='string'||typeof item.url!=='string')continue;
             let url;try{url=new URL(item.url,window.location.href);}catch(e){continue;}
             if(url.origin!==window.location.origin)continue;
             const li=document.createElement('li'),link=document.createElement('a');li.dataset.mormapNavigation='true';
-            link.href=url.href;const mark=document.createElement('img');mark.src=script?.dataset.iconUrl||script?.dataset.logoUrl;mark.alt='';mark.width=18;mark.height=18;mark.style.cssText='object-fit:contain;vertical-align:middle;margin-right:7px';link.append(mark,document.createTextNode(item.name));li.append(link);menu.append(li);
+            link.href=url.href;const mark=document.createElement('img');mark.src=script?.dataset.iconUrl||script?.dataset.logoUrl;mark.alt='';mark.width=18;mark.height=18;mark.style.cssText='display:inline-block;width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:7px';link.append(mark,document.createTextNode(item.name));li.append(link);menu.append(li);
         }
     }
     window.MorMapNavigation={found:true};return true;

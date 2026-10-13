@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 const data={
-  "version": "1.0.2",
+  "version": "1.0.3",
   "groups": {
     "start": {
       "en": "Get started",
@@ -578,7 +578,7 @@ const data={
             }
           },
           {
-            "note": "Library Undo / Redo covers the last five appearance, position and deletion actions. Save retains that history."
+            "note": "Library Undo / Redo covers the last fifty appearance, position and deletion actions. Save retains that history."
           }
         ]
       },
@@ -626,7 +626,7 @@ const data={
             }
           },
           {
-            "note": "Undo / Redo couvre les cinq dernières actions de style, de position et de suppression. Save conserve cet historique."
+            "note": "Undo / Redo couvre les cinquante dernières actions de style, de position et de suppression. Save conserve cet historique."
           }
         ]
       }
@@ -1341,7 +1341,7 @@ const data={
               "Select an asset and open Format image. Adjust image opacity and the label’s size, color and emphasis. Apply.",
               "With the source selected, click Format Painter, then a target asset card or preview. Alternatively start with the brush, choose the source, then the target.",
               "Double-click the brush to apply to several assets. Escape stops painting. Ctrl/Cmd+Shift+C and Ctrl/Cmd+Shift+V also copy and paste compatible appearance.",
-              "Undo / Redo reverses or repeats the last five appearance, position and deletion actions. Save writes the pending appearance changes, including changes to multiple assets."
+              "Undo / Redo reverses or repeats the last fifty appearance, position and deletion actions. Save writes the pending appearance changes, including changes to multiple assets."
             ]
           },
           {
@@ -1359,7 +1359,7 @@ const data={
               "Sélectionnez un modèle puis Format image. Réglez l’opacité et la taille, couleur et graisse du libellé. Validez.",
               "Avec la source sélectionnée, cliquez sur Format Painter puis sur la carte ou l’aperçu d’une cible. Vous pouvez aussi activer le pinceau puis choisir source et cible.",
               "Double-cliquez le pinceau pour plusieurs modèles. Escape termine. Ctrl/Cmd+Shift+C et Ctrl/Cmd+Shift+V copient et collent aussi l’apparence compatible.",
-              "Undo / Redo annule ou rétablit les cinq dernières actions de style, position ou suppression. Save enregistre les modifications en attente, y compris pour plusieurs modèles."
+              "Undo / Redo annule ou rétablit les cinquante dernières actions de style, position ou suppression. Save enregistre les modifications en attente, y compris pour plusieurs modèles."
             ]
           },
           {
@@ -1811,7 +1811,7 @@ const data={
             ]
           },
           {
-            "note": "Remote connections are saved immediately and participate in the same twenty-action Undo / Redo history. A conflicting newer connection is reported instead of overwritten."
+            "note": "Remote connections are saved immediately and participate in the same fifty-action Undo / Redo history. A conflicting newer connection is reported instead of overwritten."
           }
         ]
       },
@@ -1836,7 +1836,7 @@ const data={
             ]
           },
           {
-            "note": "Les liaisons distantes sont enregistrées immédiatement et participent au même historique de vingt actions Undo / Redo. Une connexion plus récente en conflit est signalée et conservée."
+            "note": "Les liaisons distantes sont enregistrées immédiatement et participent au même historique de cinquante actions Undo / Redo. Une connexion plus récente en conflit est signalée et conservée."
           }
         ]
       }
@@ -2179,7 +2179,7 @@ const data={
                 ],
                 [
                   "Undo / Redo",
-                  "Reverses or reapplies the last twenty actions in this workspace session, including deletion. Save retains history; reloading the page starts a new session."
+                  "Reverses or reapplies the last fifty actions in this workspace session, including deletion. Save retains history; reloading the page starts a new session."
                 ],
                 [
                   "Rename",
@@ -2223,7 +2223,7 @@ const data={
                 ],
                 [
                   "Undo / Redo",
-                  "Annule ou rétablit les vingt dernières actions de la session, y compris les suppressions. Save conserve l’historique ; recharger la page démarre une nouvelle session."
+                  "Annule ou rétablit les cinquante dernières actions de la session, y compris les suppressions. Save conserve l’historique ; recharger la page démarre une nouvelle session."
                 ],
                 [
                   "Rename",
@@ -2268,7 +2268,8 @@ const data={
               "Finish your changes and Save. Review the title, ports, cable routes and relevant locations.",
               "Choose Publish. Open the returned viewer link or the corresponding entry in the LibreNMS Maps menu.",
               "Check the published layout. Viewers can navigate, pan, inspect information, trace available physical paths and export; editing controls are unavailable.",
-              "After changing the draft layout, Save and Publish again to update its published snapshot."
+              "After changing the draft layout, Save and Publish again to update its published snapshot.",
+              "To add it to a LibreNMS dashboard, choose Add Widget → MorMap. Open the widget settings, select the published Logical or Physical map, and Save. Custom Map is the separate LibreNMS map widget."
             ]
           },
           {
@@ -2286,7 +2287,8 @@ const data={
               "Terminez les modifications puis Save. Vérifiez le titre, les ports, les tracés et les emplacements concernés.",
               "Choisissez Publish. Ouvrez le lien de consultation ou l’entrée correspondante du menu Maps de LibreNMS.",
               "Vérifiez la disposition publiée. Les lecteurs peuvent naviguer, déplacer la vue, consulter les informations, tracer les chemins physiques disponibles et exporter ; les commandes d’édition sont indisponibles.",
-              "Après modification de la disposition du brouillon, utilisez Save puis Publish pour actualiser sa publication."
+              "Après modification de la disposition du brouillon, utilisez Save puis Publish pour actualiser sa publication.",
+              "Pour l’ajouter à un tableau de bord LibreNMS, choisissez Add Widget → MorMap. Ouvrez les paramètres du widget, sélectionnez la carte Logical ou Physical publiée, puis Save. Custom Map est le widget distinct des cartes natives LibreNMS."
             ]
           },
           {

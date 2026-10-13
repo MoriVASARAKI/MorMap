@@ -1,6 +1,6 @@
 @extends('layouts.librenmsv1')
 @section('content')
-<div class="container-fluid"><p>To display a published map on a LibreNMS dashboard, add a <strong>Notes</strong> widget, then paste the copied iframe HTML. Your LibreNMS session permissions still apply.</p><div class="panel panel-default"><div class="panel-heading"><h3 class="panel-title">MorMap maps</h3></div><div class="panel-body">
+<div class="container-fluid"><p>On your LibreNMS dashboard, choose <strong>Add Widget → MorMap</strong>. Open the widget's settings, select a published Logical or Physical map, and Save. Your LibreNMS session permissions still apply. The copied iframe HTML can also be used in a Notes widget.</p><div class="panel panel-default"><div class="panel-heading"><h3 class="panel-title">MorMap maps</h3></div><div class="panel-body">
     @forelse ($maps as $map)
         <div class="well well-sm" style="margin-bottom:10px">
             <a href="{{ $map['url'] }}">{{ $map['name'] }}</a>
@@ -22,7 +22,8 @@
     document.querySelectorAll('[data-mormap-copy-embed]').forEach(button=>{
         button.addEventListener('click',async()=>{
             const row=button.closest('.well'),fallback=row.querySelector('.mormap-embed-fallback'),field=fallback.querySelector('textarea'),status=row.querySelector('.mormap-embed-status');
-            const src=button.dataset.url.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            const url=new URL(button.dataset.url,window.location.href);url.searchParams.set('bare','yes');url.searchParams.set('mormap_embed','1');
+            const src=url.href.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
             const snippet='<iframe src="'+src+'" width="100%" height="600" frameborder="0"></iframe>';
             field.value=snippet;
             try{
