@@ -123,11 +123,9 @@ final class PhysicalMapSchema
             self::expect($item['type'] !== 'line' || count($item['points']) === 2, 'A line needs two endpoints.');
             $map['shapes'][] = $item;
         }
-        $ends=[];
         foreach(self::collection($input['cables']??[],2000,'Cables') as $raw){
             self::expect(is_array($raw),'Invalid physical cable.');$c=['id'=>self::uuid($raw['id']??null),'source'=>self::reference($raw['source']??null,'port',true),'target'=>self::reference($raw['target']??null,'port',true),'paths'=>[],'infos'=>[],'name'=>self::text($raw['name']??'',120,'Cable name'),'comment'=>self::text($raw['comment']??'',4000,'Cable comment'),'kind'=>$raw['kind']??'cable'];
             self::expect(isset($ports[$c['source']],$ports[$c['target']])&&$c['source']!==$c['target'],'Physical cable ports must be placed in this plan.');
-            foreach([$c['source'],$c['target']] as $end){self::expect(!isset($ends[$end]),'A physical port already has a cable.');$ends[$end]=true;}
             if(isset($raw['connection_id']))$c['connection_id']=self::uuid($raw['connection_id']);
             if(isset($raw['color']))$c['color']=self::color($raw['color']);
             self::expect(in_array($c['kind'],['cable','copper','fiber','power','building','stack','backbone'],true),'Invalid cable kind.');

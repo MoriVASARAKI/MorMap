@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 const data={
-  "version": "1.0.3",
+  "version": "1.0.4",
   "groups": {
     "start": {
       "en": "Get started",
@@ -261,7 +261,7 @@ const data={
             "title": "Work with the same equipment",
             "body": [
               "Select an existing device when placing it in another workspace. Save image positions and bindings before opening that device elsewhere. A second representation does not create a second physical interface.",
-              "Each port accepts one connection per topology. Logical SW ↔ AP can coexist with Physical SW → Patch Panel → Wall Outlet → AP. Front and Rear each accept one external cable; their internal continuity is not a cable."
+              "Multiple connections per port are allowed in either topology. Existing connections are retained. Ambiguous paths, passive loops and mismatched stack roles show warnings without blocking drawing, Save or Undo. Logical and Physical remain independent. Front/rear internal continuity is not a cable."
             ]
           }
         ]
@@ -301,7 +301,7 @@ const data={
             "title": "Réutiliser le même équipement",
             "body": [
               "Choisissez le périphérique existant pour le placer dans un autre espace. Enregistrez ses positions et associations avant de l’ouvrir ailleurs. Une seconde représentation ne crée pas une nouvelle interface physique.",
-              "Chaque port accepte une connexion par topologie. Le lien Logical SW ↔ AP peut coexister avec le chemin Physical SW → Patch Panel → prise murale → AP. Front et Rear acceptent chacun un câble externe ; la continuité interne ne compte pas comme un câble."
+              "Plusieurs connexions par port sont autorisées dans chaque topologie. Les connexions existantes sont conservées. Les chemins ambigus, boucles passives et rôles Stack incohérents affichent un avertissement sans bloquer le dessin, Save ou Undo. Logical et Physical restent indépendants."
             ]
           }
         ]
@@ -1749,7 +1749,7 @@ const data={
             "title": "Document a panel or outlet",
             "steps": [
               "Add the passive equipment with Component or Device without IP. Patch panels, fibre panels and wall outlets can use paired terminations.",
-              "Create a Front / rear pair for each real pass-through port. Each side is a separate termination accepting one cable.",
+              "Create a Front / rear pair for each real pass-through port. Each side is a separate termination. Additional cables remain possible with an ambiguity or loop warning.",
               "For co-located pairs, use the visible point and its Side selector to choose Front or Rear. Older separately positioned front/rear points keep their positions.",
               "Connect the incoming and outgoing cables to the appropriate sides. Save and use Trace Physical Path to check continuity from one monitored endpoint to the other."
             ]
@@ -1767,7 +1767,7 @@ const data={
             "title": "Documenter un panneau ou une prise",
             "steps": [
               "Ajoutez l’équipement passif avec Component ou Device without IP. Les panneaux cuivre/fibre et prises murales peuvent utiliser des terminaisons jumelées.",
-              "Créez une paire Front / rear par port traversant réel. Chaque face possède sa terminaison et accepte un câble.",
+              "Créez une paire Front / rear par port traversant réel. Chaque face possède sa terminaison. Des câbles supplémentaires restent possibles avec un avertissement de chemin ambigu ou de boucle.",
               "Pour une paire superposée, utilisez le point visible et le sélecteur Side pour choisir Front ou Rear. Les anciennes positions avant/arrière séparées restent distinctes.",
               "Reliez les câbles entrant et sortant aux faces appropriées. Enregistrez et utilisez Trace Physical Path pour vérifier la continuité entre les extrémités supervisées."
             ]
@@ -1848,7 +1848,7 @@ const data={
         "physical"
       ],
       "group": "inspect",
-      "tags": "This port already has a cable in the shared infrastructure green unconnected orange",
+      "tags": "Multiple connections on this port in the shared infrastructure green unconnected orange",
       "related": [
         "port-hover",
         "physical-trace",
@@ -1889,7 +1889,7 @@ const data={
             "title": "When a green port appears unconnected",
             "steps": [
               "Inspect the exact port binding. Green can indicate an UP interface without a documented MorMap cable.",
-              "If a new cable is blocked as already connected, inspect Connections or Trace Physical Path to locate the existing shared connection. Open its saved location or use Disconnect when removing that connection is intended."
+              "An already connected port remains selectable. Adding a connection retains its existing cables and displays an advisory when the path becomes ambiguous. Inspect Connections or Trace Physical Path to review it; use Disconnect when removal is intended."
             ]
           }
         ]
@@ -1929,7 +1929,7 @@ const data={
             "title": "Si un port vert semble non raccordé",
             "steps": [
               "Vérifiez l’association exacte. Le vert peut indiquer une interface UP sans câble documenté dans MorMap.",
-              "Si un nouveau câble est refusé car le port est déjà connecté, consultez Connections ou Trace Physical Path. Ouvrez l’emplacement enregistré ou utilisez Disconnect lorsque la suppression de cette connexion est souhaitée."
+              "Un port déjà connecté reste sélectionnable. Une connexion supplémentaire conserve les câbles existants et affiche un avertissement si le chemin devient ambigu. Consultez Connections ou Trace Physical Path ; utilisez Disconnect si vous souhaitez supprimer un câble."
             ]
           }
         ]
@@ -2529,8 +2529,8 @@ const data={
                   "Check image position count, existing assignments, Stack member filter and Interface scope. Refresh the inventory when necessary."
                 ],
                 [
-                  "This port already has a cable",
-                  "Inspect Connections or Trace for its existing shared cable, including off-page endpoints."
+                  "Multiple connections on this port",
+                  "This is a nonblocking advisory. The new and existing cables are retained. Inspect Connections or Trace, including off-page endpoints."
                 ],
                 [
                   "A NIC is missing",
@@ -2574,8 +2574,8 @@ const data={
                   "Vérifiez le nombre de positions, les associations existantes, le membre Stack et Interface scope. Actualisez l’inventaire si nécessaire."
                 ],
                 [
-                  "This port already has a cable",
-                  "Consultez Connections ou Trace pour retrouver le câble partagé, y compris ses extrémités hors page."
+                  "Multiple connections on this port",
+                  "Cet avertissement ne bloque pas le travail. Le nouveau câble et les câbles existants sont conservés. Consultez Connections ou Trace, y compris les extrémités hors page."
                 ],
                 [
                   "Une carte réseau manque",

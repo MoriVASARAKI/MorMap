@@ -73,14 +73,9 @@ final class InfrastructureStore
     public static function validateConnections(array $g): void
     {
         foreach(['logical','physical'] as $workspace){
-            $used=[];$parent=[];
-            $find=function(string $ref)use(&$parent,&$find):string{if(!isset($parent[$ref]))return $parent[$ref]=$ref;if($parent[$ref]!==$ref)$parent[$ref]=$find($parent[$ref]);return $parent[$ref];};
-            if($workspace==='physical')foreach($g['ports'] as $ref=>$port){$peer=$port['peer_id']??null;if($peer&&strcmp($ref,$peer)<0&&($g['ports'][$peer]['peer_id']??null)===$ref&&($g['ports'][$peer]['device_ref']??null)===$port['device_ref'])$parent[$find($ref)]=$find($peer);}
             foreach($g[self::connectionKey($workspace)]??[] as $c){
                 $a=$c['source'];$b=$c['target'];
-                if($a===$b||!isset($g['ports'][$a],$g['ports'][$b])||isset($used[$a])||isset($used[$b]))throw new \UnexpectedValueException('Undo conflicts with a connection added later. Each port accepts one connection per topology.');
-                $used[$a]=$used[$b]=true;
-                if($workspace==='physical'){$ra=$find($a);$rb=$find($b);if($ra===$rb)throw new \UnexpectedValueException('Undo would create a passive loop. Review the newer cabling.');$parent[$ra]=$rb;}
+                if($a===$b||!isset($g['ports'][$a],$g['ports'][$b]))throw new \UnexpectedValueException('A connection references missing or identical ports.');
             }
         }
     }
@@ -179,19 +174,13 @@ final class InfrastructureStore
     {
         $connections=&$g[self::connectionKey($workspace)];$disconnected=&$g[self::disconnectedKey($workspace)];
         if($a===$b||!isset($g['ports'][$a],$g['ports'][$b]))throw new \InvalidArgumentException('Choose two distinct known ports.');
-        if(($g['ports'][$a]['peer_id']??null)===$b)throw new \InvalidArgumentException('Front and rear already have internal continuity. Choose another termination.');
+        // Occupied ports, passive loops and stack-role mismatches are design
+        // advisories in the UI. Preserve the engineer's connections on save/Undo.
         $id=self::connectionId($a,$b);
-        foreach($connections as $c)if($c['id']!==$id&&(in_array($a,[$c['source'],$c['target']],true)||in_array($b,[$c['source'],$c['target']],true)))throw new \InvalidArgumentException('A port already has a '.$workspace.' connection. Each termination accepts one connection in this topology.');
-        if($workspace==='physical'){
-            $adj=[];foreach($connections as $edge)if($edge['id']!==$id){$adj[$edge['source']][]=$edge['target'];$adj[$edge['target']][]=$edge['source'];}
-            foreach($g['ports'] as $ref=>$p){$peer=$p['peer_id']??null;if($peer&&($g['ports'][$peer]['peer_id']??null)===$ref&&($g['ports'][$peer]['device_ref']??null)===$p['device_ref'])$adj[$ref][]=$peer;}
-            $seen=[];$queue=[$a];while($queue){$ref=array_pop($queue);if(isset($seen[$ref]))continue;$seen[$ref]=true;if($ref===$b)throw new \InvalidArgumentException('This cable would close a passive loop. Choose an open termination.');foreach($adj[$ref]??[] as $next)$queue[]=$next;}
-        }
         $c=['id'=>$id,'source'=>$a,'target'=>$b,'name'=>self::text($input['name']??'',120),'comment'=>self::text($input['comment']??'',4000),'kind'=>$input['kind']??'cable'];
         if(!in_array($c['kind'],['cable','copper','fiber','power','building','stack','backbone'],true))throw new \InvalidArgumentException('Invalid connection kind.');
         if(isset($input['color'])){if(!is_string($input['color'])||!preg_match('/^#[a-fA-F0-9]{6}$/D',$input['color']))throw new \InvalidArgumentException('Invalid cable color.');$c['color']=$input['color'];}
         if(isset($input['media']))$c['media']=TopologySchema::media($input['media']);elseif(isset($connections[$id]['media']))$c['media']=$connections[$id]['media'];
-        if($c['kind']==='stack'){if($g['ports'][$a]['device_ref']!==$g['ports'][$b]['device_ref']||empty($g['ports'][$a]['stack_member'])||empty($g['ports'][$b]['stack_member'])||$g['ports'][$a]['stack_member']===$g['ports'][$b]['stack_member'])throw new \InvalidArgumentException('A stack cable must connect two distinct members of the same stack.');}
         $c['topology']=$workspace;$connections[$id]=$c;unset($disconnected[$id]);return $id;
     }
     private static function text(mixed $value,int $max): string
@@ -326,7 +315,7 @@ final class InfrastructureStore
                 if(!is_string($a)||!is_string($b)||!isset($g['ports'][$a],$g['ports'][$b]))throw new \InvalidArgumentException('Choose two known infrastructure ports.');
                 $expectedId=self::connectionId($a,$b);
                 if($id!==null&&$expectedId!==$id)throw new \InvalidArgumentException('Disconnect a cable before changing its endpoints.');
-                if($id===null&&isset($g['connections'][$expectedId]))throw new \InvalidArgumentException('These ports already have a shared cable.');
+                if($id===null&&isset($g['connections'][$expectedId]))return ['undo_token'=>null,'connection_id'=>$expectedId,'infrastructure'=>$g,'notice'=>'This exact connection already exists; its details were retained.'];
                 if($id===null&&count($g['connections'])>=20000)throw new \InvalidArgumentException('Infrastructure connection limit reached.');
                 if(array_key_exists('color',$input)&&$input['color']===null)unset($data['color']);
                 $id=$this->connect($g,$a,$b,$data);

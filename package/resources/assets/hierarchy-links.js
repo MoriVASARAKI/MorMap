@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 root.MorMapHierarchyLinks=function(ctx){
- const {S,M,G,I,D,U,C,R,shape,node,action,field,selectField,modal,mutate,renderAll,enter,uid,readOnly}=ctx,T=root.MorMapTopology,TC=root.MorMapTopologyControls,expanded=new Set();
+ const {S,M,G,I,D,U,C,R,shape,node,action,field,selectField,modal,mutate,renderAll,enter,uid,readOnly,notice}=ctx,T=root.MorMapTopology,TC=root.MorMapTopologyControls,expanded=new Set();
  const state=c=>I.cableState(c,R.graph(),S.ports,S.devices),pair=ref=>M.portItem(S.map,ref),path=ref=>R.pathText(ref);
  const totals=cables=>{const counts={up:0,down:0,unknown:0};for(const c of cables){const key=state(c).key;counts[key==='up'?'up':key==='down'?'down':'unknown']++;}return counts;};
  function list(bucket){
@@ -19,15 +19,15 @@ root.MorMapHierarchyLinks=function(ctx){
  }
  function create(){
   const devices=S.map.equipment.filter(d=>d.ports?.length);if(devices.length<2){modal('Connect locations',el=>el.append(node('p',{},'Place connection points on at least two devices first.')),null);return;}
-  const busy=ref=>(S.map.cables||[]).some(c=>c.source===ref||c.target===ref)||I.connection(S.map.infrastructure,ref);
+  const count=ref=>I.connections(R.graph(),ref).length;
   modal('Connect ports across locations',el=>{
-   el.append(node('p',{},'Choose actual placed ports. Their cable appears in every applicable location overview.'));
+   el.append(node('p',{},'Choose actual placed ports. Their cable appears in every applicable location overview. Connected ports remain selectable; additional cables may make the path ambiguous.'));
    const deviceOptions=devices.map(d=>({value:d.id,label:M.path(S.map,d.parent_id).map(l=>l.name).join(' / ')+' / '+d.label}));
    const from=selectField(el,'Source device',deviceOptions,devices[0].id),a=selectField(el,'Source port',[],''),to=selectField(el,'Target device',deviceOptions,devices[1].id),b=selectField(el,'Target port',[],'');
-   function fill(select,device,exclude){const old=select.value;select.replaceChildren();for(const p of devices.find(d=>d.id===device.value).ports){const ref=I.portRef(p);if(busy(ref)||ref===exclude)continue;select.append(node('option',{value:ref},p.label));}if([...select.options].some(o=>o.value===old))select.value=old;}
+   function fill(select,device,exclude){const old=select.value;select.replaceChildren();for(const p of devices.find(d=>d.id===device.value).ports){const ref=I.portRef(p);if(ref===exclude)continue;select.append(node('option',{value:ref},p.label+' · '+count(ref)+' connections'));}if([...select.options].some(o=>o.value===old))select.value=old;}
    from.onchange=()=>{fill(a,from);fill(b,to,a.value);};to.onchange=()=>fill(b,to,a.value);a.onchange=()=>fill(b,to,a.value);from.onchange();
    const details=TC.cable(el,{kind:'fiber',name:'',media:{}});return {a,b,details};
-  },v=>{if(!v.a.value||!v.b.value||v.a.value===v.b.value)throw Error('Choose two distinct available ports.');if(busy(v.a.value)||busy(v.b.value))throw Error('A selected port is already connected.');const cable={id:uid(),source:v.a.value,target:v.b.value,paths:{},infos:{},...v.details.value()};T.validateStack(cable,S.map.equipment);if(cable.kind==='stack')cable.color='#7c3aed';if(!mutate(map=>(map.cables??=[]).push(cable)))throw Error('The cable could not be added.');},'Connect');
+  },v=>{if(!v.a.value||!v.b.value||v.a.value===v.b.value)throw Error('Choose two distinct ports.');const existing=(S.map.cables||[]).find(c=>I.samePair(c,v.a.value,v.b.value));if(existing){S.cableSelected=existing.id;S.selected=null;renderAll();notice('This exact connection already exists. Its details were retained.',true);return;}const cable={id:uid(),source:v.a.value,target:v.b.value,paths:{},infos:{},...v.details.value()};if(cable.kind==='stack')cable.color='#7c3aed';if(!mutate(map=>(map.cables??=[]).push(cable)))throw Error('The cable could not be added.');const warning=I.warningText(S.map,'physical',R.graph());notice(warning||'Connection added.',!warning);},'Connect');
  }
  function render(layer){
   if(!S.map)return;const map={...S.map,infrastructure:R.graph(),cables:R.paths().filter(c=>!C.path(c))},buckets=T.locationLinks(map,S.current);if(!buckets.length)return;

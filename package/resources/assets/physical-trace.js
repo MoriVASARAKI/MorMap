@@ -8,9 +8,10 @@ function overlay(map){
  for(const id of map.disconnect||[])delete connections[id];
  for(const d of map.equipment||[]){const owner=d.device_id?'lnms:device:'+d.device_id:d.object_id;
   devices[owner]={...devices[owner],id:owner,name:d.label,source:d.device_id?'librenms':'mormap',device_id:d.device_id};
-  for(const p of d.ports||[]){const ref=p.port_id?'lnms:port:'+p.port_id:p.port_ref;ports[ref]={...ports[ref],id:ref,device_ref:owner,label:p.label,...(p.port_id?{source:'librenms',port_id:p.port_id}:{})};}
+  for(const p of d.ports||[]){const ref=p.port_id?'lnms:port:'+p.port_id:p.port_ref;ports[ref]={...ports[ref],id:ref,device_ref:owner,label:p.label,stack_member:d.stack_member??ports[ref]?.stack_member,...(p.port_id?{source:'librenms',port_id:p.port_id}:{})};}
  }
- for(const c of map.cables||[]){const id=c.connection_id||c.id;connections[id]={...connections[id],...c,id};}
+ const pairs=new Map(values(connections).map(c=>[[c.source,c.target].sort().join('|'),c.id]));
+ for(const c of map.cables||[]){const pair=[c.source,c.target].sort().join('|'),id=pairs.get(pair)||c.connection_id||c.id;connections[id]={...connections[id],...c,id};pairs.set(pair,id);}
  return {...g,connections,ports,devices};
 }
 function index(graph){
@@ -32,7 +33,9 @@ function trace(graph,start,prepared=graph._pathIndex||index(graph)){
  }
  const terminals=[...visited].filter(r=>(adjacent.get(r)||[]).length<2);
  const managed=ref=>active(graph,ref);
- const loop=visited.size>1&&!terminals.length;
+ // A cycle may also have an attached branch or an open end.
+ const edgeCount=[...visited].reduce((count,ref)=>count+(adjacent.get(ref)||[]).length,0)/2;
+ const loop=visited.size>1&&edgeCount>=visited.size;
  const origin=terminals.includes(start)?start:terminals.find(managed)||terminals[0]||start;
  const refs=[],edges=[],ordered=new Set();let ref=origin,previous=null;
  while(ref&&!ordered.has(ref)){refs.push(ref);ordered.add(ref);const choices=(adjacent.get(ref)||[]).filter(e=>e.id!==previous);if(choices.length!==1)break;const next=choices[0];if(ordered.has(next.to)){if(loop)edges.push(next);break;}edges.push(next);previous=next.id;ref=next.to;}
