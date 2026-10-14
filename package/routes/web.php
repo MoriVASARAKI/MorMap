@@ -42,6 +42,7 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::patch('/maps/{id}/name', [PhysicalMapController::class, 'rename'])->whereUuid('id');
             Route::delete('/maps/{id}', [PhysicalMapController::class, 'delete'])->whereUuid('id');
             Route::post('/maps/{id}/publish', [PhysicalMapController::class, 'publish'])->whereUuid('id');
+            Route::delete('/maps/{id}/publish', [PhysicalMapController::class, 'unpublish'])->whereUuid('id')->name('unpublish');
             Route::post('/maps/{id}/status', [PhysicalMapController::class, 'status'])->whereUuid('id');
             Route::get('/view/{id}', [PhysicalMapController::class, 'view'])->whereUuid('id')->name('viewer');
             Route::get('/view/{id}/data', [PhysicalMapController::class, 'viewData'])->whereUuid('id');

@@ -83,8 +83,7 @@
 /* Published views retain navigation, Properties and export tools. */
 #mormap.mw-workbench[data-read-only="true"] .mm-chrome,
 #mormap.mw-workbench[data-read-only="true"] .mw-outline,
-#mormap-physical.mw-workbench[data-read-only="true"] .mm-chrome,
-#mormap-physical.mw-workbench[data-read-only="true"] .mp-explorer{display:none!important}
+#mormap-physical.mw-workbench[data-read-only="true"] .mm-chrome{display:none!important}
 /* Dashboard iframe only: retain the live map, with no editor/viewer chrome. */
 html.mormap-dashboard-embed,html.mormap-dashboard-embed body{margin:0!important;padding:0!important;height:100%;overflow:hidden}
 html.mormap-dashboard-embed :is(#page-wrapper,.container-fluid){margin:0!important;padding:0!important;min-height:0!important}

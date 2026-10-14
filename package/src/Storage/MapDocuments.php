@@ -7,6 +7,18 @@ final class MapDocuments
 {
     public function __construct(private string $root) {}
 
+    /** Remove a publication without changing its draft or shared connectivity. */
+    public function unpublish(string $workspace, string $id, int $revision): array
+    {
+        if (!in_array($workspace, ['logical', 'physical'], true)) throw new \InvalidArgumentException('Invalid workspace.');
+        $prefix = $workspace === 'physical' ? 'physical/' : '';
+        $published = (new MapStore($this->root . '/' . $prefix . 'published'))->read($id);
+        if ($published === null) throw new \OutOfBoundsException('This plan is no longer published. Reload to update its publication state.');
+        if ($published['revision'] !== $revision) throw new \UnexpectedValueException('The published plan changed in another tab. Reload before unpublishing.');
+        $token = (new UndoStore($this->root))->apply([], [$prefix . 'published/' . $id . '.json'], [], ['workspace'=>$workspace, 'map_id'=>$id, 'action'=>'unpublish']);
+        return ['unpublished'=>true, 'undo_token'=>$token];
+    }
+
     public function change(string $workspace, string $id, int $revision, int $infrastructureRevision, ?string $name): array
     {
         if (!in_array($workspace, ['logical', 'physical'], true)) throw new \InvalidArgumentException('Invalid workspace.');

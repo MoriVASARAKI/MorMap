@@ -62,7 +62,7 @@ final class PhysicalMapController extends Controller
         return response()->json($this->infrastructure()->decorate($this->store()->save((string) Str::uuid(), 0, PhysicalMapSchema::empty($input['name']))), 201);
     }
     private function infrastructure(): InfrastructureStore {return new InfrastructureStore(storage_path('app/mormap'));}
-    public function load(string $id) { return response()->json($this->infrastructure()->decorate($this->map($id))); }
+    public function load(string $id) { return response()->json($this->infrastructure()->decorate($this->map($id)) + ['published_revision'=>$this->store(true)->read($id)['revision'] ?? null]); }
     public function save(Request $request, string $id)
     {
         abort_if(strlen($request->getContent()) > 4 * 1024 * 1024, 413);
@@ -100,8 +100,16 @@ final class PhysicalMapController extends Controller
         $data = $request->validate(['revision' => 'required|integer|min:1']); $this->map($id);
         try {
             $snapshot = $this->store()->publish($id, (int) $data['revision'], $this->store(true));
-            return response()->json(['url' => route('mormap.physical.viewer', ['id' => $id]), 'source_revision' => $snapshot['source_revision']]);
+            return response()->json(['url' => route('mormap.physical.viewer', ['id' => $id]), 'source_revision' => $snapshot['source_revision'], 'published_revision' => $snapshot['revision']]);
         } catch (\UnexpectedValueException $error) { return response()->json(['message' => $error->getMessage()], 409); }
+    }
+    public function unpublish(Request $request, string $id)
+    {
+        $data = $request->validate(['published_revision'=>'required|integer|min:1']);
+        try { return response()->json((new \PortMap\LibreNMS\Storage\MapDocuments(storage_path('app/mormap')))->unpublish('physical', $id, (int) $data['published_revision'])); }
+        catch (\OutOfBoundsException $error) { return response()->json(['message'=>$error->getMessage()], 404); }
+        catch (\UnexpectedValueException $error) { return response()->json(['message'=>$error->getMessage()], 409); }
+        catch (\InvalidArgumentException $error) { return response()->json(['message'=>$error->getMessage()], 422); }
     }
     public function status(Request $request, string $id)
     {
