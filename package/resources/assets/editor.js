@@ -19,7 +19,7 @@ root.dataset.mode=mode;
 root.addEventListener('mormap:groups',()=>{const n=selection?.type==='node'?node(selection.id):null;if(!n){message('Select a device to manage its port groups.');return;}editPortGroups(n).catch(fail);});
 const workspaceMemory=UI.memory(root,'logical');
 const propertiesPanel=UI.panel($('mm-details-panel'),$('mm-details'),$('mm-details-close'),'Properties',true);
-const V=window.MorMapVirtualization({root,svg,readOnly,workspace:'logical',map:()=>map,context:()=> 'logical',hosts:()=>map?.nodes||[],visible:()=> (map?.nodes||[]).map(n=>({...n,box:n})),enabled:()=>!!map&&!readOnly&&mode!=='view'&&!saving&&!drag,mutate:fn=>{checkpoint();fn(map);changed();render();},render:()=>embedded?fit():render(),recordUndo:recordServerUndo,notice:message,beforeChange:async()=>{if(saving||drag)throw Error('Finish the current edit first.');await save();if(dirty)throw Error('Save the current map successfully before changing guest assignments.');}});
+const V=window.MorMapVirtualization({root,svg,readOnly,preview:()=>mode==='view',workspace:'logical',map:()=>map,context:()=> 'logical',hosts:()=>map?.nodes||[],visible:()=> (map?.nodes||[]).map(n=>({...n,box:n})),enabled:()=>!!map&&!readOnly&&mode!=='view'&&!saving&&!drag,mutate:fn=>{checkpoint();fn(map);changed();render();},render:()=>embedded?fit():render(),recordUndo:recordServerUndo,notice:message,beforeChange:async()=>{if(saving||drag)throw Error('Finish the current edit first.');await save();if(dirty)throw Error('Save the current map successfully before changing guest assignments.');}});
 const notes=window.MorMapComments(svg,{point:screenPoint,editable:()=>!readOnly&&mode!=='view',commit:fn=>{checkpoint();fn();changed();render();},render});
 const portTooltip=window.MorMapPortDetails?.mount({root,load:id=>window.MorMapPortDetails.fetch(root.dataset.shared||base,id),resolve:target=>{const element=target.closest('[data-type="anchor"]');if(!element||!map)return null;const a=anchor(element.dataset.id);if(!a)return null;const n=node(a.node_id),d=deviceStatuses.get(Number(n.device_id)),ps=portState(a);return {element,portId:a.port_id,header:n.label+' / '+a.label+(d?.resolved_ip?' · '+d.resolved_ip:''),summary:[ps.label,ps.detail,...(a.comment?[a.comment]:[])]};}});
 const painter=FP.create({root,button:$('mm-painter'),scope:base,getSelection:()=>paintTarget(selection?.paintType||selection?.type,selection?.id),apply:applyPaint,applyMany:applyPaintMany,getTargets:()=>picked().length>1?picked().map(v=>paintTarget(v.type,v.id)):[paintTarget(selection?.paintType||selection?.type,selection?.id)],notice:message,enabled:()=>!readOnly&&!!map&&mode!=='view'&&!saving,onStart:()=>{pending=null;routeDraft=null;placePort=null;mode='select';root.dataset.mode=mode;root.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));lastCablePress=null;render();}});
@@ -509,7 +509,11 @@ svg.addEventListener('pointerover',e=>{const t=e.target.closest('[data-type]');s
 svg.addEventListener('pointerleave',()=>showPortLabel(null));
 svg.addEventListener('wheel',e=>{e.preventDefault();pageFitted=false;const p=screenPoint(e),factor=Math.exp(clamp(e.deltaY,-200,200)*.0015),newW=clamp(view.w*factor,100,30000),ratio=newW/view.w;view.x=p.x-(p.x-view.x)*ratio;view.y=p.y-(p.y-view.y)*ratio;view.w=newW;view.h*=ratio;render();},{passive:false});
 svg.addEventListener('contextmenu',e=>{
-    if(readOnly||mode!=='select'||!map)return;
+    if(!map)return;
+    if(readOnly||mode!=='select'){
+        const host=e.target.closest('[data-type="node"]'),items=host?V.contextItems(node(host.dataset.id)):[];
+        if(items.length){e.preventDefault();UI?.contextMenu({x:e.clientX,y:e.clientY,items});}return;
+    }
     const target=cableHitTarget(e);e.preventDefault();const point=screenPoint(e),items=[];
     let type=target?.dataset.type,id=target?.dataset.id;
     if(type==='comment')type=target.dataset.owner;

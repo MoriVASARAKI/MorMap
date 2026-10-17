@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 const data={
-  "version": "1.0.8",
+  "version": "1.0.9",
   "groups": {
     "start": {
       "en": "Get started",
@@ -80,8 +80,9 @@ const data={
         "title": "Assign and inspect",
         "steps": [
           "Select the hypervisor device. Open Properties → Virtual machines / containers → Assign LibreNMS devices.",
+          "Hosts and guests must have a server-compatible OS and device type in LibreNMS. Switches and incompatible or unidentified devices are unavailable, with the reason shown. Membership remains manual: select only the actual guests of this hypervisor. Old incompatible assignments display Review VM assignments; use Unlink to remove them or move a valid guest to the correct host. Undo remains available.",
           "Search LibreNMS, select the guests, choose VM or CT and optionally enter a VMID. Apply the selection. A guest already assigned elsewhere shows the host it will move from.",
-          "Right-click a recognized hypervisor and choose Show VMs at the top, or click its host badge. Guest names display their LibreNMS OS icons. Filter VMs / CTs or search by name, VMID, OS and IP. Status is the LibreNMS monitoring state, not the guest power state."
+          "Right-click a recognized hypervisor and choose Show VMs to expand or collapse its guest group on the map. This also works in published maps and dashboard widgets, where changes affect only the current view. The group keeps its saved position. Click the host badge to open the guest list. Guest names display their LibreNMS OS icons. Filter VMs / CTs or search by name, VMID, OS and IP. Status is the LibreNMS monitoring state, not the guest power state."
         ]
       },
       {
@@ -105,8 +106,9 @@ const data={
         "title": "Associer et consulter",
         "steps": [
           "Sélectionnez l’hyperviseur, puis Properties → Virtual machines / containers → Assign LibreNMS devices.",
+          "L’OS et le type de périphérique LibreNMS doivent correspondre à un serveur. Les commutateurs et les périphériques incompatibles ou non identifiés sont indisponibles, avec le motif affiché. L’association reste manuelle : sélectionnez les véritables invités de cet hôte. Les anciennes associations incompatibles portent la mention Review VM assignments. Utilisez Unlink ou réaffectez un invité valide à son hôte correct ; Undo reste disponible.",
           "Recherchez et sélectionnez les invités, choisissez VM ou CT et renseignez éventuellement le VMID. Validez. Un invité déjà associé affiche son hyperviseur précédent avant le déplacement.",
-          "Faites un clic droit sur un hyperviseur reconnu et choisissez Show VMs en haut du menu, ou cliquez sur son badge. Les noms des invités affichent leur icône de système LibreNMS. Filtrez par VM / CT, système ou IP. L’état provient de la supervision LibreNMS, pas de l’alimentation de la VM."
+          "Faites un clic droit sur un hyperviseur reconnu et choisissez Show VMs pour afficher ou masquer son groupe sur la carte, à sa position enregistrée. Cela fonctionne aussi dans les publications et les widgets du dashboard, uniquement pour la vue courante. Le badge ouvre la liste des invités. Les noms affichent leur icône de système LibreNMS. Filtrez par VM / CT, système ou IP. L’état provient de la supervision LibreNMS, pas de l’alimentation de la VM."
         ]
       },
       {

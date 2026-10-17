@@ -10,6 +10,7 @@ use LibreNMS\Util\Url;
 use PortMap\LibreNMS\PortMapServiceProvider;
 use PortMap\LibreNMS\Storage\VirtualizationStore;
 use PortMap\LibreNMS\Support\DeviceStatus;
+use PortMap\LibreNMS\Support\VirtualizationEligibility;
 
 final class VirtualizationController extends Controller
 {
@@ -39,13 +40,13 @@ final class VirtualizationController extends Controller
     {
         if (!$ids) return [];
         $ids=array_values(array_unique($ids)); $hosts=$this->discoveredHosts($ids);
-        $columns=array_values(array_intersect(['device_id','sysName','hostname','ip','os','features','icon','status','disabled','last_polled'], Schema::getColumnListing('devices')));
+        $columns=array_values(array_intersect(['device_id','sysName','hostname','ip','os','type','features','icon','status','disabled','last_polled'], Schema::getColumnListing('devices')));
         return DB::table('devices')->whereIn('device_id',$ids)->get($columns)->map(static function ($d) use ($hosts) {
             return ['device_id'=>(int)$d->device_id,'name'=>$d->sysName?:$d->hostname,
                 'hostname'=>$d->hostname,'resolved_ip'=>DeviceStatus::resolvedIp($d->ip??null,$d->hostname),
                 'os_icon'=>asset('images/os/'.Url::findOsImage($d->os??'', $d->features??null, $d->icon??null)),
-                'is_hypervisor'=>isset($hosts[(int)$d->device_id])||($d->os??'')==='vmware-esxi',
-                'os'=>$d->os??'', 'status'=>$d->status??null,'disabled'=>$d->disabled??null,'last_polled'=>$d->last_polled??null];
+                'os'=>$d->os??'', 'status'=>$d->status??null,'disabled'=>$d->disabled??null,'last_polled'=>$d->last_polled??null]
+                +VirtualizationEligibility::describe($d,isset($hosts[(int)$d->device_id]));
         })->all();
     }
     public function index(Request $request)
@@ -84,8 +85,14 @@ final class VirtualizationController extends Controller
             if ($g['host_id']!==null) $ids=[...$ids,$g['device_id'],$g['host_id']];
             $changes[]=$g;
         }
-        $found=DB::table('devices')->whereIn('device_id',$ids)->pluck('device_id')->map(fn($id)=>(int)$id)->all();
-        abort_if(count(array_diff($ids,$found))>0,422,'A selected LibreNMS device no longer exists. Refresh the device list.');
+        $devices=array_column($this->records($ids),null,'device_id');
+        abort_if(count(array_diff($ids,array_keys($devices)))>0,422,'A selected LibreNMS device no longer exists. Refresh the device list.');
+        foreach ($changes as $g) {
+            if ($g['host_id']===null) continue; // Cleanup of old or removed inventory stays available.
+            $host=$devices[$g['host_id']]; $guest=$devices[$g['device_id']];
+            abort_unless($host['can_host'],422,'Cannot use '.$host['name'].' as a hypervisor. '.$host['virtualization_reason']);
+            abort_unless($guest['can_guest'],422,'Cannot assign '.$guest['name'].' as a virtual guest. '.$guest['virtualization_reason']);
+        }
         try { return response()->json($this->store()->change((int)$v['revision'],$changes,['kind'=>'virtualization','workspace'=>$v['workspace'],'map_id'=>$v['map_id']])); }
         catch (\UnexpectedValueException $e) { abort(409,$e->getMessage()); }
         catch (\InvalidArgumentException $e) { abort(422,$e->getMessage()); }

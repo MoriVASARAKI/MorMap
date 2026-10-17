@@ -94,7 +94,7 @@ async function history(redo=false){
 function safeNavigation(){return !S.dirty||window.confirm('This plan has unsaved changes. Discard them?');}
 function dimensions(){const b=svg.getBoundingClientRect();return {w:Math.max(100,b.width),h:Math.max(100,b.height)};}
 function viewBox(){svg.setAttribute('viewBox',`${S.view.x} ${S.view.y} ${S.view.w} ${S.view.h}`);$('mp-zoom').textContent=Math.round(dimensions().w/S.view.w*100)+'%';}
-function fit(content=embedded){if(!S.map)return;const area=content&&!S.cabling?V.fitBounds(M.fitBounds(S.map,S.current)):{x:-30,y:-30,w:currentPage().width+60,h:currentPage().height+60},screen=dimensions(),ratio=Math.max(area.w/screen.w,area.h/screen.h);S.view={x:area.x+(area.w-screen.w*ratio)/2,y:area.y+(area.h-screen.h*ratio)/2,w:screen.w*ratio,h:screen.h*ratio};viewBox();}
+function fit(content=embedded){if(!S.map)return;const page={x:-30,y:-30,w:currentPage().width+60,h:currentPage().height+60},area=content?V.fitBounds(S.cabling?page:M.fitBounds(S.map,S.current)):page,screen=dimensions(),ratio=Math.max(area.w/screen.w,area.h/screen.h);S.view={x:area.x+(area.w-screen.w*ratio)/2,y:area.y+(area.h-screen.h*ratio)/2,w:screen.w*ratio,h:screen.h*ratio};viewBox();}
 function enter(id){portTooltip?.hide();if(id&&(!S.map||!M.location(S.map,id)))return;S.current=id;S.cabling=preferredCabling(id);for(const ancestor of M.path(S.map,id))collapsedLocations.delete(ancestor.id);rememberWorkspace();S.selected=null;S.cableSelected=null;S.cableStart=null;S.cableRoute=null;S.placePort=null;S.polygon=[];S.draft=null;S.tool='select';renderAll();fit();}
 function locationIcon(type){
  const paths={site:'M12 21s7-7 7-12A7 7 0 0 0 5 9c0 5 7 12 7 12Z M9 9a3 3 0 1 0 6 0a3 3 0 1 0-6 0',building:'M4 21V3h16v18M8 7h2m4 0h2M8 11h2m4 0h2M8 15h2m4 0h2M10 21v-3h4v3',floor:'m3 8 9-5 9 5-9 5-9-5m0 5 9 5 9-5m-18 5 9 5 9-5',room:'M3 20V4h18v16h-7m-5 0H3m6 0v-8l5 3v5',rack:'M5 2h14v20H5ZM5 8h14M5 14h14M8 5h1m-1 6h1m-1 6h1'};
@@ -285,8 +285,13 @@ svg.addEventListener('dblclick',event=>{event.preventDefault();if(painter.active
 svg.addEventListener('wheel',event=>{event.preventDefault();const p=eventPoint(event),factor=Math.exp(Math.max(-100,Math.min(100,event.deltaY))*.002),w=Math.max(160,Math.min(80000,S.view.w*factor)),ratio=w/S.view.w;S.view={x:p.x-(p.x-S.view.x)*ratio,y:p.y-(p.y-S.view.y)*ratio,w,h:S.view.h*ratio};viewBox();},{passive:false});
 svg.addEventListener('contextmenu',event=>{
  if(C.contextMenu(event))return;
- if(readOnly||!S.map||!U?.contextMenu)return;event.preventDefault();
+ if(!S.map||!U?.contextMenu)return;
  const id=event.target.closest('[data-item]')?.dataset.item,port=event.target.closest('[data-port-key]')?.dataset.portKey,items=[];
+ if(readOnly){
+  if(id&&!port&&M.kind(S.map,id)==='equipment')items.push(...V.contextItems(M.find(S.map,id)));
+  if(items.length){event.preventDefault();U.contextMenu({x:event.clientX,y:event.clientY,items});}return;
+ }
+ event.preventDefault();
  if(!id){items.push({label:S.map.comment?'Edit map comment':'Add map comment',action:()=>editPhysicalComment(null)},{label:'Print / Export',action:()=>window.MorMapOutput?.open('physical')});}
  else{S.selected=id;renderAll();const kind=M.kind(S.map,id);if(port)items.push({label:'Connection-point comment',action:()=>editPhysicalComment(id,Number(port),eventPoint(event))});
  if(kind==='equipment'&&!port)items.push(...V.contextItems(M.find(S.map,id)));
