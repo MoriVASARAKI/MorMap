@@ -289,6 +289,7 @@ svg.addEventListener('contextmenu',event=>{
  const id=event.target.closest('[data-item]')?.dataset.item,port=event.target.closest('[data-port-key]')?.dataset.portKey,items=[];
  if(!id){items.push({label:S.map.comment?'Edit map comment':'Add map comment',action:()=>editPhysicalComment(null)},{label:'Print / Export',action:()=>window.MorMapOutput?.open('physical')});}
  else{S.selected=id;renderAll();const kind=M.kind(S.map,id);if(port)items.push({label:'Connection-point comment',action:()=>editPhysicalComment(id,Number(port),eventPoint(event))});
+ if(kind==='equipment'&&!port)items.push(...V.contextItems(M.find(S.map,id)));
  items.push(...painter.items(paintItem(id)));if(kind==='location')items.push({label:'Open interior',action:()=>enter(id)});
  items.push({label:'Comment',action:()=>editPhysicalComment(id,null,eventPoint(event))},{label:'Properties',action:()=>{propertiesPanel.set(true);renderInspector();}});
  if(kind==='equipment')items.push({label:'Trace Physical Path',action:()=>R.choose()},{label:'Format device',group:'Appearance',action:()=>formatObject(M.find(S.map,id))},{label:'Align points',action:()=>C.alignPorts(M.find(S.map,id))},{label:'Export image + connection points',action:()=>exportPhysicalDevice(M.find(S.map,id)).catch(e=>notice(e.message))});

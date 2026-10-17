@@ -13,6 +13,15 @@ window.MorMapVirtualization=function (a) {
  const name=id=>record(id)?.name||a.hosts().find(d=>Number(d.device_id)===Number(id))?.label||'Device #'+id;
  const guests=id=>data.assignments.filter(g=>g.host_id===Number(id));
  const status=id=>record(id)?window.MorMapDisplay.device(record(id)):{key:'unknown',label:'Unavailable',color:'#788a99'};
+ function guestName(d,label) {
+  const line=html('span',null,{class:'mv-guest-name'});
+  if(d?.os_icon){const icon=html('img',null,{src:d.os_icon,alt:'',width:16,height:16,class:'mv-os-icon',title:d.os||'OS unknown'});icon.onerror=()=>icon.hidden=true;line.append(icon);}
+  line.append(html('strong',label));return line;
+ }
+ function contextItems(item) {
+  const id=Number(item?.device_id);
+  return id&&(record(id)?.is_hypervisor||guests(id).length)?[{label:'Show VMs',group:'Virtual machines',action:()=>open(id)}]:[];
+ }
  function button(parent,text,fn,attrs={}) {const b=html('button',text,{type:'button',...attrs});b.onclick=fn;parent.append(b);return b;}
  async function api(path='',method='GET',body) {
   if(readOnly&&method!=='GET')throw Error('Published maps are read-only.');
@@ -88,7 +97,7 @@ window.MorMapVirtualization=function (a) {
   const table=html('table'),thead=html('thead'),tr=html('tr');for(const text of ['Map','Name / OS','VMID','IP address','LibreNMS status'])tr.append(html('th',text,{scope:'col'}));if(!readOnly)tr.append(html('th','Assignment',{scope:'col'}));thead.append(tr);table.append(thead);const tbody=html('tbody');table.append(tbody);body.append(table);
   for(const g of rows){
    const d=record(g.device_id),s=status(g.device_id),tr=html('tr',null,{'data-mv-guest':g.device_id}),checkCell=html('td'),check=html('input',null,{type:'checkbox','aria-label':'Show '+name(g.device_id)+' on map'});check.checked=current.guests.includes(g.device_id);check.onchange=()=>changeLayout(activeHost,v=>{v.guests=check.checked?[...new Set([...v.guests,g.device_id])]:v.guests.filter(id=>id!==g.device_id);});checkCell.append(check);
-   const identity=html('td');identity.append(html('strong',name(g.device_id)),html('small',(g.kind==='vm'?'VM':'CT')+' · '+(d?.os||'OS unknown')));
+   const identity=html('td');identity.append(guestName(d,name(g.device_id)),html('small',(g.kind==='vm'?'VM':'CT')+' · '+(d?.os||'OS unknown')));
    const state=html('td',s.label);state.style.color=s.color;tr.append(checkCell,identity,html('td',g.vmid||'—'),html('td',d?.resolved_ip||'Unavailable'),state);
    if(!readOnly){const actions=html('td');button(actions,'Edit',()=>editGuest(g));button(actions,'Unlink',()=>change([{...g,host_id:null}],revision),{title:'Remove membership; keep the LibreNMS device and its cables'});tr.append(actions);}tbody.append(tr);
   }
@@ -134,7 +143,7 @@ window.MorMapVirtualization=function (a) {
   const group=shape('g',{'data-mv-ui':'','data-mv-group':host,transform:`translate(${g.x} ${g.y})`});group.append(shape('rect',{width:g.w,height:g.h,rx:10,fill:'#f8fbfe',stroke:'#a8bfcc','stroke-width':1.2}));
   const header=shape('g',{'data-mv-drag':host,style:'cursor:'+(readOnly?'default':'move')});header.append(shape('rect',{width:g.w,height:42,rx:10,fill:'#e6eff6'}),shape('text',{x:14,y:26,'font-size':14,'font-weight':600,fill:'#284c62'},short(name(host)+' · Guests',Math.floor((g.w-65)/8))));header.append(shape('title',{},'Drag to move the guest group independently of the hypervisor'));group.append(header);
   const collapse=shape('g',{'data-mv-host':host,'data-mv-action':'collapse',role:'button',tabindex:0,'aria-label':'Collapse virtual guest group','data-output':'omit',style:'cursor:pointer'});collapse.append(shape('rect',{x:g.w-36,y:8,width:27,height:27,rx:4,fill:'#fff'}),shape('text',{x:g.w-23,y:27,'text-anchor':'middle','font-size':18,fill:'#33596c'},'−'));group.append(collapse);
-  shown.forEach((r,i)=>{const d=record(r.device_id),s=status(r.device_id),card=shape('g',{'data-mv-host':host,'data-mv-action':'open',style:'cursor:pointer'}),y=50+i*50;card.append(shape('rect',{x:12,y,width:g.w-24,height:43,rx:6,fill:'#fff',stroke:'#d5e0e8','stroke-width':1}),shape('circle',{cx:27,cy:y+16,r:4,fill:s.color}),shape('text',{x:40,y:y+19,'font-size':12,'font-weight':600,fill:'#294d63'},short(name(r.device_id),Math.floor((g.w-90)/7))),shape('text',{x:40,y:y+34,'font-size':10,fill:'#5e7584'},short((r.kind==='vm'?'VM':'CT')+(r.vmid?' '+r.vmid:'')+' · '+(d?.os||'OS unknown')+' · '+(d?.resolved_ip||'Unavailable'),Math.floor((g.w-60)/6))));card.append(shape('title',{},name(r.device_id)+' · LibreNMS: '+s.label));group.append(card);});
+  shown.forEach((r,i)=>{const d=record(r.device_id),s=status(r.device_id),card=shape('g',{'data-mv-host':host,'data-mv-action':'open',style:'cursor:pointer'}),y=50+i*50;card.append(shape('rect',{x:12,y,width:g.w-24,height:43,rx:6,fill:'#fff',stroke:'#d5e0e8','stroke-width':1}),shape('circle',{cx:27,cy:y+16,r:4,fill:s.color}),...(d?.os_icon?[shape('image',{href:d.os_icon,x:40,y:y+6,width:16,height:16,preserveAspectRatio:'xMidYMid meet','aria-hidden':'true','data-mv-os-icon':r.device_id})]:[]),shape('text',{x:d?.os_icon?62:40,y:y+19,'font-size':12,'font-weight':600,fill:'#294d63'},short(name(r.device_id),Math.floor((g.w-(d?.os_icon?112:90))/7))),shape('text',{x:40,y:y+34,'font-size':10,fill:'#5e7584'},short((r.kind==='vm'?'VM':'CT')+(r.vmid?' '+r.vmid:'')+' · '+(d?.os||'OS unknown')+' · '+(d?.resolved_ip||'Unavailable'),Math.floor((g.w-60)/6))));card.append(shape('title',{},name(r.device_id)+' · LibreNMS: '+s.label));group.append(card);});
   const more=rows.length-shown.length,footer=shape('g',{'data-mv-host':host,'data-mv-action':'open',style:'cursor:pointer'});footer.append(shape('text',{x:14,y:g.h-13,'font-size':11,fill:'#3f7189'},more?'+'+more+' more · Open list':rows.length?'Open guest list':'Select guests in the side panel'));group.append(footer);
   if(!readOnly)group.append(shape('path',{d:`M${g.w-18} ${g.h-5} L${g.w-5} ${g.h-18} M${g.w-11} ${g.h-5} L${g.w-5} ${g.h-11}`,fill:'none',stroke:'#5b859c','stroke-width':3,'data-mv-resize':host,'data-output':'omit',style:'cursor:nwse-resize'}));parent.append(group);
  }
@@ -169,6 +178,6 @@ window.MorMapVirtualization=function (a) {
  },true);
  function bounds(){const points=[];for(const item of a.visible()){const g=layout(Number(item.device_id));if(g.expanded&&guests(item.device_id).length)points.push({x:g.x,y:g.y},{x:g.x+g.w,y:g.y+g.h});}return points;}
  function fitBounds(area){const points=bounds();if(!points.length)return area;const x=Math.min(area.x,...points.map(p=>p.x-30)),y=Math.min(area.y,...points.map(p=>p.y-30)),right=Math.max(area.x+area.w,...points.map(p=>p.x+30)),bottom=Math.max(area.y+area.h,...points.map(p=>p.y+30));return {x,y,w:right-x,h:bottom-y};}
- return {render,inspect,refresh,open,bounds,fitBounds,dragging:()=>!!drag};
+ return {render,inspect,refresh,open,contextItems,bounds,fitBounds,dragging:()=>!!drag};
 };
 })();

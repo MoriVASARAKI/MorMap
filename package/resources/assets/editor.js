@@ -532,6 +532,7 @@ svg.addEventListener('contextmenu',e=>{
             {label:'Delete cable',action:()=>{selection={type:'link',id};removeSelection();}});
     }else if(type==='node'||type==='anchor'){
         const object=type==='node'?node(id):anchor(id);if(!object)return;selection={type,id};
+        if(type==='node')items.push(...V.contextItems(object));
         items.push({label:object.comment?'Edit comment':'Add comment',action:()=>editComment(object,point)});
         if(type==='node')items.push(...painter.items(paintTarget(type,id)),{label:'Format device',action:()=>formatObject(object)},{label:'Align points',action:()=>alignNodePorts(object)},{label:'Export image + connection points',action:()=>exportDevice(object).catch(fail)});
         items.push({label:'Delete '+(type==='node'?'device':'connection point'),action:()=>{selection={type,id};removeSelection();}});

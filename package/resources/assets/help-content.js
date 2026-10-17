@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 const data={
-  "version": "1.0.7",
+  "version": "1.0.8",
   "groups": {
     "start": {
       "en": "Get started",
@@ -81,7 +81,7 @@ const data={
         "steps": [
           "Select the hypervisor device. Open Properties → Virtual machines / containers → Assign LibreNMS devices.",
           "Search LibreNMS, select the guests, choose VM or CT and optionally enter a VMID. Apply the selection. A guest already assigned elsewhere shows the host it will move from.",
-          "Click the host badge to view guests. Filter VMs / CTs or search by name, VMID, OS and IP. Status is the LibreNMS monitoring state, not the guest power state."
+          "Right-click a recognized hypervisor and choose Show VMs at the top, or click its host badge. Guest names display their LibreNMS OS icons. Filter VMs / CTs or search by name, VMID, OS and IP. Status is the LibreNMS monitoring state, not the guest power state."
         ]
       },
       {
@@ -106,7 +106,7 @@ const data={
         "steps": [
           "Sélectionnez l’hyperviseur, puis Properties → Virtual machines / containers → Assign LibreNMS devices.",
           "Recherchez et sélectionnez les invités, choisissez VM ou CT et renseignez éventuellement le VMID. Validez. Un invité déjà associé affiche son hyperviseur précédent avant le déplacement.",
-          "Le badge de l’hôte ouvre la liste avec filtres VM / CT, système et IP. L’état provient de la supervision LibreNMS, pas de l’alimentation de la VM."
+          "Faites un clic droit sur un hyperviseur reconnu et choisissez Show VMs en haut du menu, ou cliquez sur son badge. Les noms des invités affichent leur icône de système LibreNMS. Filtrez par VM / CT, système ou IP. L’état provient de la supervision LibreNMS, pas de l’alimentation de la VM."
         ]
       },
       {

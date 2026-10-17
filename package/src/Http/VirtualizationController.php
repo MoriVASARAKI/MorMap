@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\{DB, Schema};
 use LibreNMS\Interfaces\Plugins\PluginManagerInterface;
+use LibreNMS\Util\Url;
 use PortMap\LibreNMS\PortMapServiceProvider;
 use PortMap\LibreNMS\Storage\VirtualizationStore;
 use PortMap\LibreNMS\Support\DeviceStatus;
@@ -21,13 +22,29 @@ final class VirtualizationController extends Controller
         });
     }
     private function store(): VirtualizationStore { return new VirtualizationStore(storage_path('app/mormap')); }
+    private function discoveredHosts(array $ids): array
+    {
+        $hosts=[];
+        if (Schema::hasTable('vminfo') && Schema::hasColumn('vminfo','device_id')) {
+            $hosts=DB::table('vminfo')->whereIn('device_id',$ids)->distinct()->pluck('device_id')->all();
+        }
+        if (Schema::hasTable('applications') && Schema::hasColumns('applications',['device_id','app_type'])) {
+            $query=DB::table('applications')->whereIn('device_id',$ids)->where('app_type','proxmox');
+            if (Schema::hasColumn('applications','deleted_at')) $query->whereNull('deleted_at');
+            $hosts=[...$hosts,...$query->distinct()->pluck('device_id')->all()];
+        }
+        return array_fill_keys(array_map('intval',$hosts),true);
+    }
     private function records(array $ids): array
     {
         if (!$ids) return [];
-        $columns=array_values(array_intersect(['device_id','sysName','hostname','ip','os','status','disabled','last_polled'], Schema::getColumnListing('devices')));
-        return DB::table('devices')->whereIn('device_id',array_values(array_unique($ids)))->get($columns)->map(static function ($d) {
+        $ids=array_values(array_unique($ids)); $hosts=$this->discoveredHosts($ids);
+        $columns=array_values(array_intersect(['device_id','sysName','hostname','ip','os','features','icon','status','disabled','last_polled'], Schema::getColumnListing('devices')));
+        return DB::table('devices')->whereIn('device_id',$ids)->get($columns)->map(static function ($d) use ($hosts) {
             return ['device_id'=>(int)$d->device_id,'name'=>$d->sysName?:$d->hostname,
                 'hostname'=>$d->hostname,'resolved_ip'=>DeviceStatus::resolvedIp($d->ip??null,$d->hostname),
+                'os_icon'=>asset('images/os/'.Url::findOsImage($d->os??'', $d->features??null, $d->icon??null)),
+                'is_hypervisor'=>isset($hosts[(int)$d->device_id])||($d->os??'')==='vmware-esxi',
                 'os'=>$d->os??'', 'status'=>$d->status??null,'disabled'=>$d->disabled??null,'last_polled'=>$d->last_polled??null];
         })->all();
     }

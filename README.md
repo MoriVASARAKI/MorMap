@@ -1,4 +1,4 @@
-# MorMap 1.0.7
+# MorMap 1.0.8
 
 MorMap is a LibreNMS plugin for logical network diagrams, physical location plans and reusable device images.
 
@@ -10,7 +10,7 @@ Run the following command as the `librenms` user from your LibreNMS installation
 lnms plugin:add morivasaraki/mormap
 ```
 
-MorMap is available on Packagist. The release tag for this version is `v1.0.7`.
+MorMap is available on Packagist. The release tag for this version is `v1.0.8`.
 
 Requirements: a working LibreNMS installation with its Composer plugin system, PHP 8.2 or later within PHP 8.x, and the PHP DOM and Fileinfo extensions. Composer resolves the required `librenms/plugin-interfaces` dependency. Open **MorMap** from the LibreNMS menu after installation.
 
@@ -42,7 +42,7 @@ Use the **MorMap** widget for MorMap publications. LibreNMS’s **Custom Map** w
 
 MorMap stores maps, uploaded images, physical plans and infrastructure records under `storage/app/mormap` in the LibreNMS installation. Back up this directory and your LibreNMS Composer configuration and lock files before upgrading. Save drafts and close open MorMap editor tabs before replacing the installed version.
 
-Version 1.0.7 remains compatible with maps from 1.0.0–1.0.6, including route-cache recovery and menu error protection. The public package name is `morivasaraki/mormap`; the internal plugin identifier remains `portmap`, and existing `/plugin/mormap` URLs and storage paths are retained.
+Version 1.0.8 remains compatible with maps from 1.0.0–1.0.7, including route-cache recovery and menu error protection. The public package name is `morivasaraki/mormap`; the internal plugin identifier remains `portmap`, and existing `/plugin/mormap` URLs and storage paths are retained.
 
 When upgrading from 0.9.8 or earlier, the first infrastructure load separates Logical and Physical connections into schema 2 and retains the original graph in `infrastructure/graph-before-topology-v2.json`. Restoring a pre-0.9.9 release requires its matching pre-upgrade data backup. An existing custom Composer path repository may continue to select its local package; migrate that repository configuration before switching such an installation to the public package.
 
@@ -53,6 +53,11 @@ MorMap is licensed under the [MIT License](LICENSE). Bundled libraries and fonts
 Concept, design and development: **Morteza VASARAKI** — [GitHub](https://github.com/MoriVASARAKI).
 
 Official reference: [LibreNMS plugin packages](https://docs.librenms.org/Extensions/Plugin-System/).
+
+## 1.0.8 changes
+
+- Add **Show VMs** at the top of a hypervisor’s right-click menu in Logical and Physical. A host is recognized by existing MorMap guest assignments or LibreNMS virtualization discovery; a normal Linux/Windows OS or a device name alone does not make it a hypervisor.
+- Show LibreNMS OS icons before guest names in the guest list and map groups, including Linux distribution and custom device icons resolved by LibreNMS. Existing group controls, monitoring status, membership, cables and saved layouts are retained.
 
 ## 1.0.7 changes
 
