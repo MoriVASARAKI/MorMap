@@ -141,6 +141,7 @@ final class PhysicalMapSchema
             self::expect(is_array($raw['infos']??[])&&count($raw['infos']??[])<=502,'Invalid cable information positions.');foreach($raw['infos']??[] as $key=>$position){self::expect((bool)preg_match('/^(?:location|cabling):(?:root|[a-f0-9-]{36})$/D',$key)&&is_array($position),'Invalid information context.');$c['infos'][$key]=['x'=>self::number($position['x']??null,-100000,100000,'Info X'),'y'=>self::number($position['y']??null,-100000,100000,'Info Y')];if(isset($position['font_size']))$c['infos'][$key]['font_size']=self::number($position['font_size'],4,32,'Info text size');if(isset($position['attachment'])){$a=$position['attachment'];self::expect(is_array($a),'Invalid info attachment.');$c['infos'][$key]['attachment']=['fraction'=>self::number($a['fraction']??null,0,1,'Info cable fraction'),'dx'=>self::number($a['dx']??null,-200000,200000,'Info offset X'),'dy'=>self::number($a['dy']??null,-200000,200000,'Info offset Y')];}}
             $map['cables'][]=$c+self::commentBoxes($raw);
         }
+        if (array_key_exists('vm_groups',$input)) $map['vm_groups']=VirtualizationLayout::validate($input['vm_groups']);
         return $map;
     }
     private static function reference(mixed $value,string $kind,bool $native=false): string

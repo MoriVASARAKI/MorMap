@@ -8,7 +8,7 @@ function normalize(value={}){const out={...defaults};for(const [key,allowed]of O
 function draw(parent,{points,type='right-angle',format={},color='#08a84f',selected=false,id='cable',shape,G}){
  const f=normalize(format),tag=(type==='right-angle'&&!f.rounding)?'polyline':'path',geometry=tag==='polyline'?{points:points.map(p=>`${p.x},${p.y}`).join(' ')}:{d:G.connectorPath(points,type,f)},defs=shape('defs'),key='mm-line-'+String(id).replace(/[^a-z\d_-]/gi,'');
  let stroke=color;if(f.line==='gradient'){const gradient=shape('linearGradient',{id:key+'-gradient',gradientUnits:'userSpaceOnUse',x1:points[0].x,y1:points[0].y,x2:points.at(-1).x+(points[0].x===points.at(-1).x?.001:0),y2:points.at(-1).y});gradient.append(shape('stop',{offset:'0%','stop-color':color}),shape('stop',{offset:'100%','stop-color':f.gradient}));defs.append(gradient);stroke='url(#'+key+'-gradient)';}
- const common={...geometry,fill:'none','stroke-linecap':f.cap,'stroke-linejoin':f.join,'vector-effect':'non-scaling-stroke','pointer-events':'none'};
+ const common={...geometry,fill:'none','stroke-linecap':f.cap,'stroke-linejoin':f.join,'pointer-events':'none'};
  if(f.line!=='none'&&f.opacity>0){const group=shape('g',{opacity:f.opacity,'data-cable-paint':'true'});group.append(shape(tag,{...common,stroke:'#fff','stroke-width':f.width+(selected?5:3)}));
   const pattern={dash:[8,5],dot:[1,5],'dash-dot':[8,4,1,4],'long-dash':[16,6]}[f.dash],dash=pattern?{'stroke-dasharray':pattern.map(n=>n*f.width/3).join(' ')}:{};
   group.append(shape(tag,{...common,...dash,stroke,'stroke-width':f.width,'data-cable-stroke':'true'}));

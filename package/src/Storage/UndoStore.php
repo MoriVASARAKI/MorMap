@@ -68,6 +68,7 @@ final class UndoStore
             }else $blobs[$path]=$value['bytes'];
         }
         if(isset($writes['infrastructure/graph.json']))InfrastructureStore::validateConnections($writes['infrastructure/graph.json']);
+        if(isset($writes[VirtualizationStore::FILE]))VirtualizationStore::validate($writes[VirtualizationStore::FILE]);
         // A map restoration must not introduce references to assets removed elsewhere.
         foreach($writes as $path=>$map)if(preg_match('~^(?:physical/)?(?:maps|published)/~',$path)){
             $images=array_merge(array_column($map['equipment']??$map['nodes']??[],'image'),\PortMap\LibreNMS\Support\FloorBackground::images($map));

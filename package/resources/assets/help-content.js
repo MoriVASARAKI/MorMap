@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 const data={
-  "version": "1.0.6",
+  "version": "1.0.7",
   "groups": {
     "start": {
       "en": "Get started",
@@ -60,6 +60,69 @@ const data={
     }
   },
   "topics": [
+{
+  "id": "virtual-guests",
+  "scopes": [
+    "logical",
+    "physical"
+  ],
+  "group": "build",
+  "tags": "VM CT Proxmox Hyper-V hypervisor guest virtual machine container",
+  "related": [
+    "shared-model",
+    "save-documents"
+  ],
+  "en": {
+    "title": "Virtual machines and containers",
+    "intro": "Manually associate existing LibreNMS devices with their hypervisor, without changing network connections.",
+    "sections": [
+      {
+        "title": "Assign and inspect",
+        "steps": [
+          "Select the hypervisor device. Open Properties → Virtual machines / containers → Assign LibreNMS devices.",
+          "Search LibreNMS, select the guests, choose VM or CT and optionally enter a VMID. Apply the selection. A guest already assigned elsewhere shows the host it will move from.",
+          "Click the host badge to view guests. Filter VMs / CTs or search by name, VMID, OS and IP. Status is the LibreNMS monitoring state, not the guest power state."
+        ]
+      },
+      {
+        "title": "Arrange groups on the map",
+        "steps": [
+          "Select guests in the Map column and choose Show selected on map. Dotted lines represent host membership.",
+          "Drag the group header to move the whole group independently of the host and cables. Resize from its lower-right corner. Several groups can stay expanded.",
+          "Save the map to retain positions per hypervisor and map. Physical saves separate layouts for each location / cabling view. Collapse and expand retain the placement. Fit content includes expanded groups."
+        ]
+      },
+      {
+        "note": "Assignments are shared by Logical and Physical and saved immediately with Undo. Unlink removes membership without deleting a device or cable. Map layout uses normal Save / Undo / Publish. Published views permit temporary expansion and filtering without editing stored data. Missing LibreNMS devices remain listed as unavailable."
+      }
+    ]
+  },
+  "fr": {
+    "title": "Machines virtuelles et conteneurs",
+    "intro": "Associez manuellement les périphériques LibreNMS à leur hyperviseur sans modifier les connexions réseau.",
+    "sections": [
+      {
+        "title": "Associer et consulter",
+        "steps": [
+          "Sélectionnez l’hyperviseur, puis Properties → Virtual machines / containers → Assign LibreNMS devices.",
+          "Recherchez et sélectionnez les invités, choisissez VM ou CT et renseignez éventuellement le VMID. Validez. Un invité déjà associé affiche son hyperviseur précédent avant le déplacement.",
+          "Le badge de l’hôte ouvre la liste avec filtres VM / CT, système et IP. L’état provient de la supervision LibreNMS, pas de l’alimentation de la VM."
+        ]
+      },
+      {
+        "title": "Organiser la carte",
+        "steps": [
+          "Cochez les invités dans la colonne Map et cliquez sur Show selected on map. Les pointillés représentent l’appartenance à l’hôte.",
+          "Déplacez le groupe par son en-tête et redimensionnez-le par le coin inférieur droit, indépendamment de l’hôte et des câbles. Plusieurs groupes peuvent rester ouverts.",
+          "Enregistrez la carte pour conserver la position. Chaque carte, hyperviseur et vue Physical possède sa disposition. Réduire puis développer conserve la position."
+        ]
+      },
+      {
+        "note": "Les associations sont partagées entre Logical et Physical et enregistrées immédiatement avec Undo. Unlink conserve le périphérique et les câbles. La disposition utilise Save / Undo / Publish. Une publication permet une consultation temporaire sans écriture. Les périphériques retirés restent indiqués comme indisponibles."
+      }
+    ]
+  }
+},
     {
       "id": "logical-start",
       "scopes": [

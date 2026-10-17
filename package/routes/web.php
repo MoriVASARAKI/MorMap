@@ -15,6 +15,9 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::prefix('/plugin/mormap')->middleware(\PortMap\LibreNMS\Http\WorkspaceMiddleware::class)->name('mormap.')->group(function () {
         Route::get('/', [PortMapController::class, 'home'])->name('home');
         Route::get('/assets/{file}', [PortMapController::class, 'asset'])->name('asset');
+        Route::get('/virtualization', [\PortMap\LibreNMS\Http\VirtualizationController::class, 'index'])->name('virtualization');
+        Route::get('/virtualization/devices', [\PortMap\LibreNMS\Http\VirtualizationController::class, 'devices']);
+        Route::put('/virtualization', [\PortMap\LibreNMS\Http\VirtualizationController::class, 'save']);
         Route::post('/undo',[InfrastructureController::class,'undo']);
         Route::get('/infrastructure',[InfrastructureController::class,'index'])->name('infrastructure');
         Route::post('/infrastructure/components',[InfrastructureController::class,'add']);
