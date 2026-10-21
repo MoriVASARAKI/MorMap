@@ -12,7 +12,11 @@ use PortMap\LibreNMS\Hooks\PortMapMenu;
 final class PortMapServiceProvider extends ServiceProvider
 {
     public const SLUG = 'portmap';
+<<<<<<< HEAD
     public const VERSION = '1.1.0';
+=======
+    public const VERSION = '1.0.9';
+>>>>>>> 205c4a9e3b5b393617424e3776e9fa1bb9129d20
 
     /**
      * A route cache created before MorMap was installed does not contain the
@@ -37,7 +41,10 @@ final class PortMapServiceProvider extends ServiceProvider
             || ! str_contains($cachedRoutes, "'mormap.asset'")
             || ! str_contains($cachedRoutes, "'mormap.published'")
             || ! str_contains($cachedRoutes, "'mormap.physical.unpublish'")
+<<<<<<< HEAD
             || ! str_contains($cachedRoutes, "'mormap.unpublish'")
+=======
+>>>>>>> 205c4a9e3b5b393617424e3776e9fa1bb9129d20
             || ! str_contains($cachedRoutes, "'mormap.virtualization'")
             || ! str_contains($cachedRoutes, "'mormap.widget'")) {
             $this->app->instance('routes.cached', false);
