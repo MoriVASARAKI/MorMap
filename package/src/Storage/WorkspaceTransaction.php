@@ -19,7 +19,7 @@ final class WorkspaceTransaction
     }
     private function path(string $relative): string
     {
-        if (!preg_match('~^(?:(?:physical/)?(?:maps|published)/[a-f0-9-]{36}\.json|infrastructure/graph\.json|undo/[a-f0-9]{48}\.json|assets/(?:[a-f0-9-]{36}|stencil-[a-z0-9-]{1,80})\.json|images/[a-f0-9-]{36})$~D', $relative)) throw new \RuntimeException('Invalid asset transaction path.');
+        if (!preg_match('~^(?:(?:physical/)?(?:maps|published)/[a-f0-9-]{36}\.json|infrastructure/graph\.json|virtualization/guests\.json|undo/[a-f0-9]{48}\.json|assets/(?:[a-f0-9-]{36}|stencil-[a-z0-9-]{1,80})\.json|images/[a-f0-9-]{36})$~D', $relative)) throw new \RuntimeException('Invalid asset transaction path.');
         return $this->root . '/' . $relative;
     }
     private function atomic(string $path, string $bytes): void

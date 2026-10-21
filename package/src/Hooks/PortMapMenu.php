@@ -13,7 +13,7 @@ final class PortMapMenu implements MenuEntryHook
 {
     public function authorize(): bool
     {
-        return Auth::user()?->can('admin') === true;
+        return Auth::check();
     }
 
     /** @return array{0: string, 1: array<string, mixed>} */

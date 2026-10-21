@@ -23,7 +23,7 @@ final class MorMapWidgetController extends Controller
     public function __invoke(Request $request): JsonResponse
     {
         abort_unless(app(PluginManagerInterface::class)->pluginEnabled(PortMapServiceProvider::SLUG), 404);
-        abort_unless($request->user()?->can('admin') === true, 403);
+        abort_unless($request->user() !== null, 403);
 
         $input = $request->validate(['id' => 'required|integer|min:1', 'settings' => 'sometimes|boolean']);
         $widget = UserWidget::findOrFail($input['id']);
@@ -44,6 +44,7 @@ final class MorMapWidgetController extends Controller
         }
 
         $showSettings = $request->boolean('settings');
+        if ($showSettings) abort_unless($request->user()->can('update', $widget->dashboard), 403);
         $html = view($showSettings ? 'portmap::widgets.settings' : 'portmap::widgets.map',
             array_merge($settings, ['maps' => $maps, 'map' => $map]))->render();
 

@@ -226,11 +226,11 @@ final class InfrastructureStore
         }elseif(($graph['ports'][$ref]['device_ref']??null)!==$owner)throw new \InvalidArgumentException('The physical port does not belong to this MorMap component.');
         if($member)$graph['ports'][$ref]['stack_member']=$member;
     }
-    private function connect(array &$g,string $a,string $b,array $input,string $workspace='physical'): string
+    private function connect(array &$g,string $a,string $b,array $input,string $workspace='physical',bool $retained=false): string
     {
         $connections=&$g[self::connectionKey($workspace)];$disconnected=&$g[self::disconnectedKey($workspace)];
         if($a===$b||!isset($g['ports'][$a],$g['ports'][$b]))throw new \InvalidArgumentException('Choose two distinct known ports.');
-        if(isset($g['inventory_issues'][$a])||isset($g['inventory_issues'][$b]))throw new \InvalidArgumentException('A connection endpoint no longer matches LibreNMS inventory. Choose its current interface.');
+        if(!$retained&&(isset($g['inventory_issues'][$a])||isset($g['inventory_issues'][$b])))throw new \InvalidArgumentException('A connection endpoint no longer matches LibreNMS inventory. Choose its current interface.');
         // Occupied ports, passive loops and stack-role mismatches are design
         // advisories in the UI. Preserve the engineer's connections on save/Undo.
         $id=self::connectionId($a,$b);
@@ -272,7 +272,7 @@ final class InfrastructureStore
                 $cid=self::connectionId($a,$b);
                 if(isset($connections[$cid])&&!isset($remaining[$cid]))$removedFromOld[$cid]=true;
             }
-            $removals=array_unique(array_merge($map['disconnect']??[],array_keys(array_diff_key($removedFromOld,$remaining))));
+            $removals=array_unique(array_merge($map['disconnect']??[],$workspace==='physical'?[]:array_keys(array_diff_key($removedFromOld,$remaining))));
             foreach($removals as $connection){
                 if(!isset($allowed[$connection])){
                     // Recovery for an old orphan: a placed endpoint is enough to request
@@ -303,7 +303,8 @@ final class InfrastructureStore
             foreach($map[$linkKey] as &$link){$a=$points[$link['source']]??null;$b=$points[$link['target']]??null;if(!$a||!$b)throw new \InvalidArgumentException('Cable endpoints must be placed in this view.');
                 $expectedId=self::connectionId($a,$b);if(isset($link['connection_id'])&&$link['connection_id']!==$expectedId)throw new \InvalidArgumentException('Connection identity does not match its ports.');
                 if(isset($seen[$expectedId]))throw new \InvalidArgumentException('A connection is drawn more than once.');$seen[$expectedId]=true;
-                $link['connection_id']=$this->connect($graph,$a,$b,$link,$workspace);
+                $retained=isset($original[self::connectionKey($workspace)][$expectedId])&&in_array($a,$this->viewPoints($workspace,$old),true)&&in_array($b,$this->viewPoints($workspace,$old),true);
+                $link['connection_id']=$this->connect($graph,$a,$b,$link,$workspace,$retained);
             }unset($link);
             if(count($connections)>20000||count($graph['devices'])>10000||count($graph['ports'])>80000)throw new \InvalidArgumentException('Infrastructure size limit reached.');
             $graph['migration_conflicts']=array_values(array_filter($graph['migration_conflicts']??[],fn($c)=>$c['workspace']!==$workspace||$c['map_id']!==$id));

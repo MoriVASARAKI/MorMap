@@ -102,6 +102,18 @@ function restoreHistory(before,after,graph,workspace){
  for(const d of after[physicalView?'equipment':'nodes']||[]){const p=T.profile(graph,d);if(p?.revision)d.profile_revision=p.revision;}after.disconnect=[...removed];after.infrastructure=currentGraph;after.infrastructure_revision=currentGraph?.revision;return after;
 }
 
-const api={scope,restoreHistory,deviceRef,portRef,connection,connections,samePair,viewGraph,warnings,warningText,logical,physical,trace,cableState,values};
+
+function sharedUndo(map,graph,workspace,geometry,drawing){
+ const old=scope(map.infrastructure,workspace),next=scope(graph,workspace),key=workspace==='physical'?'cables':'links',overrides=new Map(),fields=['name','comment','kind','media','color'];
+ for(const link of map[key]||[]){const previous=old?.connections?.[link.connection_id],current=next?.connections?.[link.connection_id];if(!previous||!current)continue;const keep={};for(const field of fields)if(JSON.stringify(previous[field])===JSON.stringify(current[field])&&JSON.stringify(link[field])!==JSON.stringify(previous[field]))keep[field]=link[field];overrides.set(link.id,keep);}
+ // A shared disconnect removes its local drawing. Restore that drawing's
+ // manual routes on Undo without restoring older equipment coordinates.
+ if(workspace==='physical'&&drawing?.id===map.id){const refs=new Set(map.equipment.flatMap(e=>e.ports.map(portRef)));for(const saved of drawing.cables||[]){const id=saved.connection_id;if(id&&!old?.connections?.[id]&&next?.connections?.[id]&&!map.disconnect?.includes(id)&&refs.has(saved.source)&&refs.has(saved.target)&&!map.cables.some(c=>samePair(c,saved.source,saved.target)))map.cables.push(JSON.parse(JSON.stringify(saved)));}}
+ if(workspace==='physical')physical(map,graph,false);else logical(map,graph,geometry,false);
+ for(const link of map[key]||[])for(const [field,value]of Object.entries(overrides.get(link.id)||{})){if(value===undefined)delete link[field];else link[field]=value;}
+ return map;
+}
+
+const api={sharedUndo,scope,restoreHistory,deviceRef,portRef,connection,connections,samePair,viewGraph,warnings,warningText,logical,physical,trace,cableState,values};
 if(typeof module!=='undefined')module.exports=api;else root.MorMapInfrastructure=api;
 })(typeof window==='undefined'?globalThis:window);

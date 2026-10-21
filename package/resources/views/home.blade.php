@@ -8,13 +8,14 @@
 <link rel="stylesheet" href="{{ route('mormap.asset', ['file' => 'editor.css']) }}?v={{ $mormapVersion }}">
 <link rel="stylesheet" href="{{ route('mormap.asset', ['file'=>'workspace.css']) }}?v={{ $mormapVersion }}">
 <link rel="stylesheet" href="{{ route('mormap.asset', ['file'=>'workbench.css']) }}?v={{ $mormapVersion }}">
+<link rel="stylesheet" href="{{ route('mormap.asset', ['file'=>'virtualization.css']) }}?v={{ $mormapVersion }}">
 <div id="mormap" class="mormap-starting" data-shared="{{ route('mormap.home') }}" data-base="{{ $readOnly ? $viewerBase : route('mormap.home') }}" data-read-only="{{ $readOnly ? 'true' : 'false' }}" data-user="{{ $mormapUser ?? 'session' }}" data-csrf="{{ csrf_token() }}">
     @include('portmap::chrome', ['activeWorkspace'=>'logical', 'stateId'=>'mm-state'])
     <div class="mm-toolbar">
         @unless($readOnly)
         <div class="mm-tool-group" role="group" aria-label="Map"><span class="mm-group-label">Map</span><div class="mm-group-buttons">
             <select id="mm-maps" aria-label="Map"></select><button id="mm-new">New</button><button id="mm-rename" title="Rename map">Rename</button><button id="mm-delete-map" title="Delete map and published copy">Delete map</button><button id="mm-save" class="mm-primary">Save</button><button id="mm-reload">Reload</button>
-            <button id="mm-publish" title="Publish the saved version to the LibreNMS Maps menu">Publish to Maps</button>
+            <button id="mm-publish" title="Publish the saved version to the LibreNMS Maps menu">Publish to Maps</button><button id="mm-unpublish" disabled title="Remove the published copy while retaining the editable map">Unpublish</button>
         </div></div>
         <div class="mm-tool-group" role="group" aria-label="Add"><span class="mm-group-label">Add</span><div class="mm-group-buttons">
             <button id="mm-add">Device</button><button data-mode="anchor" class="mm-point-tool" title="Add connection point" aria-label="Add connection point">X</button><button data-mode="cable">Cable</button>
@@ -75,6 +76,7 @@
 <script src="{{ route('mormap.asset', ['file'=>'physical-trace.js']) }}?v={{ $mormapVersion }}" defer></script>
 <script src="{{ route('mormap.asset', ['file'=>'infrastructure.js']) }}?v={{ $mormapVersion }}" defer></script>
 <script src="{{ route('mormap.asset', ['file'=>'topology-controls.js']) }}?v={{ $mormapVersion }}" defer></script>
+<script src="{{ route('mormap.asset', ['file'=>'virtualization.js']) }}?v={{ $mormapVersion }}" defer></script>
 <script src="{{ route('mormap.asset', ['file' => 'editor.js']) }}?v={{ $mormapVersion }}" defer></script>
 <link rel="stylesheet" href="{{ route('mormap.asset', ['file'=>'help.css']) }}?v={{ $mormapVersion }}">
 <script src="{{ route('mormap.asset', ['file'=>'help-content.js']) }}?v={{ $mormapVersion }}" defer></script>

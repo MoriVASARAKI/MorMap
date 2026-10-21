@@ -9,16 +9,18 @@ const base=root.dataset.base.replace(/\/$/,''), NS='http://www.w3.org/2000/svg';
 const readOnly=root.dataset.readOnly==='true';
 const embedded=readOnly&&new URLSearchParams(location.search).get('mormap_embed')==='1';
 if(embedded)gridEnabled=false;
-let mapLoadTicket=0;
+let mapLoadTicket=0,publishedRevision=null,mapLoading=false;
 let lastCablePress=null,lastCableDetour=0,routeDraft=null;
 let map=null, mode=readOnly?'view':'select', selection=null, pending=null, dirty=false, history=[], future=[], statuses=new Map(), deviceStatuses=new Map(), portLabels=new Map();
 let hoveredAnchor=null, pageFitted=true, statusQueued=false;
 let placePort=null, allPortsByDevice=new Map();
 let view={x:0,y:0,w:1920,h:1080}, drag=null, saving=false, statusBusy=false, requestGeneration=0, portCache=new Map();
 root.dataset.mode=mode;
+root.addEventListener('click',e=>{if(mapLoading){e.preventDefault();e.stopImmediatePropagation();}},true);root.addEventListener('submit',e=>{if(mapLoading){e.preventDefault();e.stopImmediatePropagation();}},true);
 root.addEventListener('mormap:groups',()=>{const n=selection?.type==='node'?node(selection.id):null;if(!n){message('Select a device to manage its port groups.');return;}editPortGroups(n).catch(fail);});
 const workspaceMemory=UI.memory(root,'logical');
 const propertiesPanel=UI.panel($('mm-details-panel'),$('mm-details'),$('mm-details-close'),'Properties',true);
+const V=window.MorMapVirtualization({root,svg,readOnly,preview:()=>mode==='view',workspace:'logical',map:()=>map,context:()=> 'logical',hosts:()=>map?.nodes||[],visible:()=> (map?.nodes||[]).map(n=>({...n,box:n})),enabled:()=>!!map&&!readOnly&&mode!=='view'&&!saving&&!drag,mutate:fn=>{checkpoint();fn(map);changed();render();},render:()=>embedded?fit():render(),recordUndo:recordServerUndo,notice:message,beforeChange:async()=>{if(saving||drag)throw Error('Finish the current edit first.');await save();if(dirty)throw Error('Save the current map successfully before changing guest assignments.');}});
 const notes=window.MorMapComments(svg,{point:screenPoint,editable:()=>!readOnly&&mode!=='view',commit:fn=>{checkpoint();fn();changed();render();},render});
 const portTooltip=window.MorMapPortDetails?.mount({root,load:id=>window.MorMapPortDetails.fetch(root.dataset.shared||base,id),resolve:target=>{const element=target.closest('[data-type="anchor"]');if(!element||!map)return null;const a=anchor(element.dataset.id);if(!a)return null;const n=node(a.node_id),d=deviceStatuses.get(Number(n.device_id)),ps=portState(a);return {element,portId:a.port_id,header:n.label+' / '+a.label+(d?.resolved_ip?' · '+d.resolved_ip:''),summary:[ps.label,ps.detail,...(a.comment?[a.comment]:[])]};}});
 const painter=FP.create({root,button:$('mm-painter'),scope:base,getSelection:()=>paintTarget(selection?.paintType||selection?.type,selection?.id),apply:applyPaint,applyMany:applyPaintMany,getTargets:()=>picked().length>1?picked().map(v=>paintTarget(v.type,v.id)):[paintTarget(selection?.paintType||selection?.type,selection?.id)],notice:message,enabled:()=>!readOnly&&!!map&&mode!=='view'&&!saving,onStart:()=>{pending=null;routeDraft=null;placePort=null;mode='select';root.dataset.mode=mode;root.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));lastCablePress=null;render();}});
@@ -63,11 +65,11 @@ async function api(path,options={}) {
     if(!r.ok) throw new Error(data.message||`HTTP ${r.status}`);return data;
 }
 function state(){
-    painter.refresh();if($('mm-pan'))$('mm-pan').setAttribute('aria-pressed',String(mode==='pan'));
+    painter.refresh();for(const id of ['mm-maps','mm-new','mm-reload'])if($(id))$(id).disabled=saving;root.setAttribute('aria-busy',String(saving));root.inert=mapLoading;if($('mm-pan'))$('mm-pan').setAttribute('aria-pressed',String(mode==='pan'));
     if(readOnly){$('mm-state').textContent=map?.name||'Loading map…';$('mm-refresh').disabled=!map||statusBusy;$('mm-empty').hidden=!!map?.nodes.length;return;}
     $('mm-state').textContent=map?`${map.name} · ${dirty?'Unsaved changes':'Saved'} · revision ${map.revision}`:'No map selected';
     for(const id of ['mm-rename','mm-delete-map'])if($(id))$(id).disabled=!map||saving;
-    $('mm-save').disabled=!map||saving||!dirty;$('mm-publish').disabled=!map||saving||dirty||mode==='view';
+    $('mm-unpublish').disabled=!map||!publishedRevision||saving||dirty||mode==='view';$('mm-save').disabled=!map||saving||!dirty;$('mm-publish').disabled=!map||saving||dirty||mode==='view';
     $('mm-undo').disabled=!history.length||mode==='view'||saving;$('mm-redo').disabled=!future.length||mode==='view'||saving;
     $('mm-delete').disabled=!selection||mode==='view';$('mm-add').disabled=!map||mode==='view';
     $('mm-empty').hidden=!!map?.nodes.length;
@@ -78,11 +80,12 @@ function state(){
 function checkpoint(){history.push(G.copy(map));if(history.length>50)history.shift();future=[];}
 function changed(){dirty=true;state();}
 function recordServerUndo(token){if(!token)return;history.push({__undo:token});if(history.length>50)history.shift();future=[];state();}
-function clearDocument(){requestGeneration++;mapLoadTicket++;map=null;dirty=false;selection=null;selectedItems=[];drag=null;pending=null;routeDraft=null;placePort=null;statuses.clear();deviceStatuses.clear();painter.cancel();workspaceMemory.set({});root.dataset.mapId='';render();}
+function clearDocument(){publishedRevision=null;requestGeneration++;mapLoadTicket++;map=null;dirty=false;selection=null;selectedItems=[];drag=null;pending=null;routeDraft=null;placePort=null;statuses.clear();deviceStatuses.clear();painter.cancel();workspaceMemory.set({});root.dataset.mapId='';render();}
 async function applyHistory(from,to){
  if(!from.length||mode==='view'||saving)return;const entry=from.at(-1);
- if(entry.__undo){saving=true;state();try{const result=await api('/undo',{method:'POST',body:{token:entry.__undo}});from.pop();to.push({__undo:result.undo_token});if(to.length>50)to.shift();const maps=await listMaps(),id=result.context?.map_id||map?.id;
-  if(id&&maps.some(m=>m.id===id))loadMap(await api('/maps/'+id),true);else clearDocument();const warning=map?I.warningText(map,'logical'):'';message('Undo / Redo applied.'+(warning?' '+warning:''),!warning,!!warning);
+ if(entry.__undo){saving=true;state();try{const result=await api('/undo',{method:'POST',body:{token:entry.__undo}});from.pop();to.push({__undo:result.undo_token});if(to.length>50)to.shift();if(result.context?.kind==='virtualization'){await V.refresh();message('Virtual guest Undo / Redo applied.',true);return;}const maps=await listMaps(),context=result.context||{},id=context.map_id||map?.id;
+  if(map&&(!context.map_id||context.action==='unpublish'||context.map_id!==map.id)){if(result.infrastructure)I.sharedUndo(map,result.infrastructure,'logical',G);if(context.action==='unpublish'&&id===map.id)publishedRevision=result.published_revision??null;render();}
+  else if(id&&maps.some(m=>m.id===id))loadMap(await api('/maps/'+id),true);else clearDocument();if(context.action==='unpublish'&&window.MorMapRefreshNavigation)await window.MorMapRefreshNavigation().catch(()=>{});const warning=map?I.warningText(map,'logical'):'';message('Undo / Redo applied.'+(warning?' '+warning:''),!warning,!!warning);
  }catch(e){fail(e);}finally{saving=false;state();}return;}
  if(!map||map.id!==entry.id){message('Open the matching map to undo this edit.');return;}
  to.push(G.copy(map));if(to.length>50)to.shift();const rev=map.revision,infra=map.infrastructure,infraRevision=map.infrastructure_revision,oldSize=JSON.stringify(D.canvas(map.canvas));map=I.restoreHistory(map,from.pop(),infra,'logical');map.revision=rev;map.infrastructure_revision=infraRevision;selection=null;pending=null;routeDraft=null;changed();if(oldSize!==JSON.stringify(D.canvas(map.canvas)))pageSizeChanged();else render();const warning=I.warningText(map,'logical');message(warning||'Undo / Redo applied.',!warning,!!warning);
@@ -189,7 +192,7 @@ function render(){
         portLabels.set(a.id,label);
     }
     for(const guide of snapGuides)el('line',guide.axis==='x'?{x1:guide.value,x2:guide.value,y1:view.y,y2:view.y+view.h,stroke:'#be55b0','stroke-dasharray':'4 4','vector-effect':'non-scaling-stroke','pointer-events':'none','data-output':'omit'}:{y1:guide.value,y2:guide.value,x1:view.x,x2:view.x+view.w,stroke:'#be55b0','stroke-dasharray':'4 4','vector-effect':'non-scaling-stroke','pointer-events':'none','data-output':'omit'},svg);
-    routePreview(el('g',{'data-layer':'route-preview','data-output':'omit','pointer-events':'none'},handleLayer));renderAnnotations();renderPicked();inspect();state();
+    routePreview(el('g',{'data-layer':'route-preview','data-output':'omit','pointer-events':'none'},handleLayer));renderAnnotations();renderPicked();V.render();inspect();state();
 }
 function editCableDetails(l){let controls;dialog('Cable details',c=>{controls=TC.cable(c,l);},()=>{const value=controls.value();checkpoint();Object.assign(l,value);if(l.kind==='stack'&&!l.color)l.color='#7c3aed';changed();render();message(I.warningText(map,'logical'),false,true);});}
 function editComment(object,position){
@@ -238,7 +241,7 @@ function inspect(){
     const object=selection.type==='node'?node(selection.id):selection.type==='anchor'?anchor(selection.id):map.links.find(l=>l.id===selection.id);
     if(object&&selection.type!=='node'){if(object.comment)detail('Comment',object.comment);if(!readOnly&&mode!=='view'){const comment=html('button',object.comment?'Edit comment':'Add comment');comment.onclick=()=>editComment(object);box.append(comment);}}
     if(selection.type==='node'){
-        const n=node(selection.id);box.append(html('h3',n.label));if(n.stack_member)detail('Stack member',String(n.stack_member)+' · shared management IP');for(const group of T.groups(map.infrastructure,n)){const gs=T.groupState(group,statuses,deviceStatuses,D);detail(group.name,`${group.type==='team'?'NIC Team':'Bond / LAG'} · ${gs.up} UP / ${gs.down} DOWN / ${gs.unknown} Unknown · ${gs.label}`);}const record=deviceStatuses.get(Number(n.device_id));if(n.device_id){detail('System Name',record?.sysName||'Unavailable');detail('Resolved IP',record?.resolved_ip||'Unavailable');}else detail('Component',n.label);
+        const n=node(selection.id);box.append(html('h3',n.label));V.inspect(box,n);if(n.stack_member)detail('Stack member',String(n.stack_member)+' · shared management IP');for(const group of T.groups(map.infrastructure,n)){const gs=T.groupState(group,statuses,deviceStatuses,D);detail(group.name,`${group.type==='team'?'NIC Team':'Bond / LAG'} · ${gs.up} UP / ${gs.down} DOWN / ${gs.unknown} Unknown · ${gs.label}`);}const record=deviceStatuses.get(Number(n.device_id));if(n.device_id){detail('System Name',record?.sysName||'Unavailable');detail('Resolved IP',record?.resolved_ip||'Unavailable');}else detail('Component',n.label);
         const infrastructureDevice=map.infrastructure?.devices?.[I.deviceRef(n)],placements=Object.values(infrastructureDevice?.placements||{}).filter(p=>!n.stack_member||!p.stack_member||p.stack_member===n.stack_member);if(!placements.length&&infrastructureDevice?.physical)placements.push(infrastructureDevice.physical);for(const physical of placements){detail('Physical location',physical.path+' · U'+physical.rack_u);if(!readOnly&&physical.plan_id){const link=html('a','Open in Physical',{href:base+'/physical?map='+encodeURIComponent(physical.plan_id)+'&location='+encodeURIComponent(physical.location_id||'')+'&equipment='+encodeURIComponent(I.deviceRef(n))+(n.stack_member?'&member='+n.stack_member:'')});box.append(link);}}
         if(!readOnly&&mode!=='view'){
             const form=html('form',null),name=field(form,'Display name',html('input',null,{value:n.label,maxLength:120,required:true})),comment=field(form,'Comment',html('textarea',null,{value:n.comment||'',maxLength:4000,rows:3})),grid=html('div',null,{className:'mm-property-grid'});form.append(grid);
@@ -269,21 +272,21 @@ function dialog(title,build,onSubmit,compact=false){
 function field(container,label,input){input.setAttribute('aria-label',label);container.append(html('label',label),input);return input;}
 function textDialog(title,value,submit){let input;dialog(title,c=>{input=field(c,'Name',html('input',null,{value,required:true,maxLength:120}));},()=>submit(input.value.trim()||'Untitled'));}
 async function listMaps(){const maps=await api('/maps');const s=$('mm-maps');s.replaceChildren(html('option','Choose map…',{value:''}));for(const m of maps)s.append(html('option',m.name,{value:m.id}));if(map)s.value=map.id;return maps;}
-function loadMap(data,keepHistory=false){requestGeneration++;root.dataset.mapId=data.id;if(!readOnly){workspaceMemory.set({map:data.id});$('mm-maps').value=data.id;}map=I.logical(data,data.infrastructure,G,!readOnly);infrastructureNotice=false;map.canvas=D.canvas(data.canvas);dirty=false;selection=null;pending=null;routeDraft=null;placePort=null;hoveredAnchor=null;if(!keepHistory){history=history.filter(e=>e.__undo);future=[];}statuses.clear();deviceStatuses.clear();allPortsByDevice.clear();portCache.clear();if(embedded)fit();else fitPage();refreshStatus();const warning=I.warningText(map,'logical');if(warning)message(warning,false,true);else if(data.infrastructure?.migration_conflicts?.some(c=>c.workspace==='logical'&&c.map_id===data.id))message('This legacy map contains unresolved cable references. Review its connection details.',false,true);}
-async function openMap(id){if(!id)return;if(dirty&&!confirm('Discard unsaved changes?')){$('mm-maps').value=map.id;return;}const ticket=++mapLoadTicket,data=await api('/maps/'+id);if(ticket!==mapLoadTicket)return;message();loadMap(data);}
-async function save(){if(readOnly||!map||saving||!dirty)return;saving=true;state();const snapshot=G.copy(map),payload=G.copy(map);delete payload.infrastructure;try{const result=await api('/maps/'+map.id,{method:'PUT',body:payload});if(map.id===snapshot.id){const edited=JSON.stringify(map)!==JSON.stringify(snapshot);if(!edited){map=I.logical(result,result.infrastructure,G);dirty=false;}else{map.revision=result.revision;map.infrastructure=result.infrastructure;map.infrastructure_revision=result.infrastructure_revision;for(const l of map.links){const saved=result.links.find(v=>v.id===l.id);if(saved?.connection_id)l.connection_id=saved.connection_id;}map.disconnect=(map.disconnect||[]).filter(id=>!(snapshot.disconnect||[]).includes(id));}}const warning=I.warningText(map,'logical');message('Saved. '+(warning||'Logical connections and physical cables are independent.'),!warning,!!warning);await listMaps();}catch(e){fail(e);}finally{saving=false;render();}}
+function loadMap(data,keepHistory=false){publishedRevision=data.published_revision??null;delete data.published_revision;requestGeneration++;root.dataset.mapId=data.id;if(!readOnly){workspaceMemory.set({map:data.id});$('mm-maps').value=data.id;}map=I.logical(data,data.infrastructure,G,!readOnly);infrastructureNotice=false;map.canvas=D.canvas(data.canvas);dirty=false;selection=null;pending=null;routeDraft=null;placePort=null;hoveredAnchor=null;if(!keepHistory){history=history.filter(e=>e.__undo);future=[];}statuses.clear();deviceStatuses.clear();allPortsByDevice.clear();portCache.clear();if(embedded)fit();else fitPage();refreshStatus();const warning=I.warningText(map,'logical');if(warning)message(warning,false,true);else if(data.infrastructure?.migration_conflicts?.some(c=>c.workspace==='logical'&&c.map_id===data.id))message('This legacy map contains unresolved cable references. Review its connection details.',false,true);}
+async function openMap(id){if(!id||saving||drag||V.dragging())return;if(dirty&&!confirm('Discard unsaved changes?')){$('mm-maps').value=map.id;return;}saving=true;mapLoading=true;state();try{const ticket=++mapLoadTicket,data=await api('/maps/'+id);if(ticket!==mapLoadTicket)return;message();loadMap(data);}finally{saving=false;mapLoading=false;state();}}
+async function save(){if(readOnly||!map||saving||!dirty||V.dragging())return;saving=true;state();const snapshot=G.copy(map),payload=G.copy(map);delete payload.infrastructure;try{const result=await api('/maps/'+map.id,{method:'PUT',body:payload});if(map.id===snapshot.id){const edited=JSON.stringify(map)!==JSON.stringify(snapshot);if(!edited){map=I.logical(result,result.infrastructure,G);dirty=false;}else{map.revision=result.revision;map.infrastructure=result.infrastructure;map.infrastructure_revision=result.infrastructure_revision;for(const l of map.links){const saved=result.links.find(v=>v.id===l.id);if(saved?.connection_id)l.connection_id=saved.connection_id;}map.disconnect=(map.disconnect||[]).filter(id=>!(snapshot.disconnect||[]).includes(id));}}const warning=I.warningText(map,'logical');message('Saved. '+(warning||'Logical connections and physical cables are independent.'),!warning,!!warning);await listMaps();}catch(e){fail(e);}finally{saving=false;render();}}
 
 function fit(){
     pageFitted=false;const w=svg.clientWidth||1000,h=svg.clientHeight||650;
     if(!map?.nodes.length){fitPage();return;}
-    const pts=map.nodes.flatMap(n=>[{x:n.x,y:n.y-30},{x:n.x+n.w,y:n.y+n.h}]).concat(map.links.flatMap(l=>l.points));
+    const pts=map.nodes.flatMap(n=>[{x:n.x,y:n.y-30},{x:n.x+n.w,y:n.y+n.h}]).concat(map.links.flatMap(l=>l.points),V.bounds());
     const minX=Math.min(...pts.map(p=>p.x))-70,minY=Math.min(...pts.map(p=>p.y))-70,maxX=Math.max(...pts.map(p=>p.x))+70,maxY=Math.max(...pts.map(p=>p.y))+70;
     const scale=Math.max((maxX-minX)/w,(maxY-minY)/h,.25);view={x:(minX+maxX-w*scale)/2,y:(minY+maxY-h*scale)/2,w:w*scale,h:h*scale};render();
     if(embedded){
         // Labels have a constant screen size. Include their rendered extents,
         // not just the equipment rectangles, when fitting a dashboard widget.
         for(let attempt=0;attempt<10;attempt++){
-            const boxes=[...svg.querySelectorAll('[data-layer="devices"],[data-layer="device-labels"],[data-layer="cables"]')].map(g=>g.getBBox()).filter(b=>b.width||b.height);
+            const boxes=[...svg.querySelectorAll('[data-layer="devices"],[data-layer="device-labels"],[data-layer="cables"],[data-layer="virtual-guests"]')].map(g=>g.getBBox()).filter(b=>b.width||b.height);
             if(!boxes.length)break;
             const pad=16*view.w/w,x=Math.min(...boxes.map(b=>b.x))-pad,y=Math.min(...boxes.map(b=>b.y))-pad,right=Math.max(...boxes.map(b=>b.x+b.width))+pad,bottom=Math.max(...boxes.map(b=>b.y+b.height))+pad;
             if(x>=view.x&&y>=view.y&&right<=view.x+view.w&&bottom<=view.y+view.h)break;
@@ -294,6 +297,7 @@ function fit(){
 async function refreshStatus(){
     if(!map)return;
     if(statusBusy){statusQueued=true;return;}
+    V.refresh();
     const ids=[...new Set([...map.anchors.map(a=>a.port_id),...map.nodes.flatMap(n=>T.groups(map.infrastructure,n).flatMap(g=>[...g.ports,g.aggregate].filter(r=>r?.startsWith('lnms:port:')).map(r=>Number(r.split(':').at(-1)))))].filter(Boolean))],device_ids=[...new Set(map.nodes.map(n=>n.device_id).filter(Boolean))];
     const generation=requestGeneration;statusBusy=true;statusQueued=false;state();
     try{
@@ -507,7 +511,11 @@ svg.addEventListener('pointerover',e=>{const t=e.target.closest('[data-type]');s
 svg.addEventListener('pointerleave',()=>showPortLabel(null));
 svg.addEventListener('wheel',e=>{e.preventDefault();pageFitted=false;const p=screenPoint(e),factor=Math.exp(clamp(e.deltaY,-200,200)*.0015),newW=clamp(view.w*factor,100,30000),ratio=newW/view.w;view.x=p.x-(p.x-view.x)*ratio;view.y=p.y-(p.y-view.y)*ratio;view.w=newW;view.h*=ratio;render();},{passive:false});
 svg.addEventListener('contextmenu',e=>{
-    if(readOnly||mode!=='select'||!map)return;
+    if(!map)return;
+    if(readOnly||mode!=='select'){
+        const host=e.target.closest('[data-type="node"]'),items=host?V.contextItems(node(host.dataset.id)):[];
+        if(items.length){e.preventDefault();UI?.contextMenu({x:e.clientX,y:e.clientY,items});}return;
+    }
     const target=cableHitTarget(e);e.preventDefault();const point=screenPoint(e),items=[];
     let type=target?.dataset.type,id=target?.dataset.id;
     if(type==='comment')type=target.dataset.owner;
@@ -530,6 +538,7 @@ svg.addEventListener('contextmenu',e=>{
             {label:'Delete cable',action:()=>{selection={type:'link',id};removeSelection();}});
     }else if(type==='node'||type==='anchor'){
         const object=type==='node'?node(id):anchor(id);if(!object)return;selection={type,id};
+        if(type==='node')items.push(...V.contextItems(object));
         items.push({label:object.comment?'Edit comment':'Add comment',action:()=>editComment(object,point)});
         if(type==='node')items.push(...painter.items(paintTarget(type,id)),{label:'Format device',action:()=>formatObject(object)},{label:'Align points',action:()=>alignNodePorts(object)},{label:'Export image + connection points',action:()=>exportDevice(object).catch(fail)});
         items.push({label:'Delete '+(type==='node'?'device':'connection point'),action:()=>{selection={type,id};removeSelection();}});
@@ -563,12 +572,13 @@ async function documentChange(remove=false){
   if(map?.id!==id)throw Error('Return to the original map.');saving=true;state();try{loadMap(await api('/maps/'+id+'/name',{method:'PATCH',body:{revision:map.revision,infrastructure_revision:map.infrastructure_revision,name:input.value.trim()}}));await listMaps();if(window.MorMapRefreshNavigation)await window.MorMapRefreshNavigation().catch(()=>{});message('Map renamed.',true);}finally{saving=false;state();}
  });
 }
+async function unpublish(){if(readOnly||!map||!publishedRevision||dirty||saving||mode==='view')return;saving=true;state();try{const result=await api('/maps/'+map.id+'/publish',{method:'DELETE',body:{published_revision:publishedRevision}});publishedRevision=null;recordServerUndo(result.undo_token);if(window.MorMapRefreshNavigation)await window.MorMapRefreshNavigation().catch(()=>{});message('Unpublished. The editable map and connections are preserved. Undo restores the publication.',true);}catch(e){fail(e);}finally{saving=false;state();}}
 async function publish(){
     if(readOnly||!map||saving)return;
     if(dirty){message('Save the map before publishing it to Maps.');return;}
     saving=true;state();
     try{
-        const result=await api('/maps/'+map.id+'/publish',{method:'POST',body:{revision:map.revision}});
+        const result=await api('/maps/'+map.id+'/publish',{method:'POST',body:{revision:map.revision}});publishedRevision=result.published_revision??null;
         let menuFound=false;
         if(window.MorMapRefreshNavigation){try{menuFound=await window.MorMapRefreshNavigation();}catch(e){menuFound=false;}}
         message(menuFound?'Published. Open this map from the LibreNMS Maps menu.':'Published. The Maps menu could not be updated on this page; use the link below.',true);
@@ -583,7 +593,7 @@ $('mm-refresh').onclick=refreshStatus;
 if(!readOnly){
     $('mm-grid').onclick=()=>{gridEnabled=!gridEnabled;$('mm-grid').setAttribute('aria-pressed',String(gridEnabled));render();};$('mm-snap').onclick=()=>{snapEnabled=!snapEnabled;$('mm-snap').setAttribute('aria-pressed',String(snapEnabled));};
     if($('mm-rename'))$('mm-rename').onclick=()=>documentChange();if($('mm-delete-map'))$('mm-delete-map').onclick=()=>documentChange(true);
-    $('mm-size').onclick=pageSizeDialog;$('mm-publish').onclick=publish;
+    $('mm-size').onclick=pageSizeDialog;$('mm-publish').onclick=publish;$('mm-unpublish').onclick=unpublish;
     $('mm-cancel').onclick=()=>$('mm-dialog').close();
     $('mm-new').onclick=()=>{if(dirty&&!confirm('Discard unsaved changes?'))return;textDialog('New map','My network',async name=>{loadMap(await api('/maps',{method:'POST',body:{name}}));await listMaps();});};
     $('mm-maps').onchange=()=>openMap($('mm-maps').value).catch(fail);

@@ -12,6 +12,8 @@ use PortMap\LibreNMS\Storage\MapStore;
 use PortMap\LibreNMS\Storage\InfrastructureStore;
 use PortMap\LibreNMS\Support\AssetLibrary;
 use PortMap\LibreNMS\Support\DeviceStatus;
+use PortMap\LibreNMS\Support\MapAccess;
+use PortMap\LibreNMS\Support\SavedInventory;
 use PortMap\LibreNMS\Support\PhysicalMapSchema;
 
 /** Physical plans have their own drafts and published snapshots. */
@@ -21,7 +23,7 @@ final class PhysicalMapController extends Controller
     {
         $this->middleware(function (Request $request, $next) {
             abort_unless(app(PluginManagerInterface::class)->pluginEnabled(PortMapServiceProvider::SLUG), 404);
-            abort_unless($request->user()?->can('admin') === true, 403);
+            abort_unless($request->user() && ($request->user()->can('admin') || in_array($request->route()->getActionMethod(), ['home', 'view', 'viewData', 'viewStatus', 'viewImage'], true)), 403);
             return $next($request);
         });
     }
@@ -31,10 +33,13 @@ final class PhysicalMapController extends Controller
     }
     private function map(string $id, bool $published = false): array
     {
-        $map = $this->store($published)->read($id); abort_if($map === null, 404); return $map;
+        $map = $this->store($published)->read($id); abort_if($map === null, 404);
+        if ($published) (new MapAccess())->assertView($map);
+        return $map;
     }
     public function home()
     {
+        if (!(new MapAccess())->admin()) return redirect()->route('mormap.viewer.index');
         return view('portmap::physical', ['pagetitle' => 'MorMap · Physical', 'show_menu' => true,
             'mormapVersion' => PortMapServiceProvider::VERSION, 'mormapUser'=>auth()->id(), 'readOnly' => false]);
     }
@@ -66,7 +71,7 @@ final class PhysicalMapController extends Controller
     public function save(Request $request, string $id)
     {
         abort_if(strlen($request->getContent()) > 4 * 1024 * 1024, 413);
-        $this->map($id);
+        $before=$this->map($id);$savedOwners=SavedInventory::portOwners($before);
         try { $map = PhysicalMapSchema::validate($request->all()); }
         catch (\InvalidArgumentException $error) { return response()->json(['message' => $error->getMessage()], 422); }
         $deviceIds = array_values(array_filter(array_column($map['equipment'], 'device_id')));
@@ -81,13 +86,13 @@ final class PhysicalMapController extends Controller
             abort_unless($background && in_array($background['mime'], ['image/png','image/jpeg','image/svg+xml'], true), 422, 'Choose a PNG, JPG or SVG floor background.');
         }
         foreach ($map['equipment'] as &$device) {
-            abort_unless($device['device_id'] ? in_array($device['device_id'], $existing, true) : isset($graph['devices'][$device['object_id']]), 422, 'Equipment no longer exists in the infrastructure.');
+            abort_unless($device['device_id'] ? (in_array($device['device_id'], $existing, true) || SavedInventory::device($before,$device)) : isset($graph['devices'][$device['object_id']]), 422, 'Equipment no longer exists in the infrastructure.');
             $asset = $assets->get($device['image']);
             abort_unless($asset !== null, 422, 'A device image is missing from the asset library.');
             $device['image_width'] = $asset['width']; $device['image_height'] = $asset['height'];
         }
         unset($device);
-        foreach ($mappedPorts as $port => $owner) { abort_unless((int) ($portOwners[$port] ?? 0) === $owner, 422, 'A mapped port does not belong to its equipment.'); }
+        foreach ($mappedPorts as $port => $owner) { abort_unless(((int) ($portOwners[$port] ?? 0) === $owner || ($savedOwners[$port]??null)===$owner), 422, 'A mapped port does not belong to its equipment.'); }
         // Authoritative catalogue dimensions must obey the persisted schema too.
         try { $map = PhysicalMapSchema::validate($map); }
         catch (\InvalidArgumentException $error) { return response()->json(['message' => $error->getMessage()], 422); }
@@ -118,10 +123,10 @@ final class PhysicalMapController extends Controller
         return $this->statusResponse($input['device_ids'] ?? array_column($map['equipment'], 'device_id'),$input['port_refs']??self::portRefs($map));
     }
     private static function portRefs(array $map): array {return array_merge([], ...array_map(fn($d)=>array_map([InfrastructureStore::class,'portRef'],$d['ports']),$map['equipment']));}
-    private function statusResponse(array $ids,array $refs=[])
+    private function statusResponse(array $ids,array $refs=[],?array $published=null)
     {
         $ids = array_values(array_filter(array_unique($ids)));
-        $graph=$this->infrastructure()->snapshot();$ids=InfrastructureStore::relatedDevices($graph,$ids,$refs);
+        $graph=$this->infrastructure()->snapshot();$access=new MapAccess();if($published!==null)$graph=$access->graph($graph,$published);$ids=$access->allowedDeviceIds(InfrastructureStore::relatedDevices($graph,$ids,$refs));
         // The compact port list includes every nondeleted port, including ports without a drawn connection point.
         return response()->json(['devices' => DeviceStatus::devices($ids),
             'ports' => DeviceStatus::portsForDevices($ids), 'infrastructure'=>$graph]);
@@ -133,8 +138,8 @@ final class PhysicalMapController extends Controller
             'mormapVersion' => PortMapServiceProvider::VERSION, 'readOnly' => true,
             'viewerBase' => route('mormap.physical.viewer', ['id' => $id])]);
     }
-    public function viewData(string $id) { return response()->json($this->infrastructure()->decorate($this->map($id, true))); }
-    public function viewStatus(string $id) { $map=$this->map($id,true);return $this->statusResponse(array_column($map['equipment'],'device_id'),self::portRefs($map)); }
+    public function viewData(string $id) { return response()->json((new MapAccess())->decorate($this->map($id, true), $this->infrastructure()->snapshot())); }
+    public function viewStatus(string $id) { $map=$this->map($id,true);return $this->statusResponse(array_column($map['equipment'],'device_id'),self::portRefs($map),$map); }
     public function viewImage(string $id, string $image)
     {
         abort_unless(in_array($image, array_merge(array_column($this->map($id, true)['equipment'], 'image'), \PortMap\LibreNMS\Support\FloorBackground::images($this->map($id, true))), true), 404);

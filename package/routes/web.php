@@ -15,6 +15,9 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::prefix('/plugin/mormap')->middleware(\PortMap\LibreNMS\Http\WorkspaceMiddleware::class)->name('mormap.')->group(function () {
         Route::get('/', [PortMapController::class, 'home'])->name('home');
         Route::get('/assets/{file}', [PortMapController::class, 'asset'])->name('asset');
+        Route::get('/virtualization', [\PortMap\LibreNMS\Http\VirtualizationController::class, 'index'])->name('virtualization');
+        Route::get('/virtualization/devices', [\PortMap\LibreNMS\Http\VirtualizationController::class, 'devices']);
+        Route::put('/virtualization', [\PortMap\LibreNMS\Http\VirtualizationController::class, 'save']);
         Route::post('/undo',[InfrastructureController::class,'undo']);
         Route::get('/infrastructure',[InfrastructureController::class,'index'])->name('infrastructure');
         Route::post('/infrastructure/components',[InfrastructureController::class,'add']);
@@ -50,6 +53,7 @@ Route::middleware(['web', 'auth'])->group(function () {
             Route::get('/view/{id}/images/{image}', [PhysicalMapController::class, 'viewImage'])->whereUuid('id')->where('image', '[A-Za-z0-9_-]+');
         });
         Route::post('/maps/{id}/publish', [PortMapController::class, 'publish'])->whereUuid('id');
+        Route::delete('/maps/{id}/publish', [PortMapController::class, 'unpublish'])->whereUuid('id')->name('unpublish');
         Route::get('/view', [PublishedMapController::class, 'index'])->name('viewer.index');
         Route::get('/view/{id}', [PublishedMapController::class, 'home'])->whereUuid('id')->name('viewer');
         Route::get('/view/{id}/data', [PublishedMapController::class, 'load'])->whereUuid('id');

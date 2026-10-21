@@ -1,4 +1,4 @@
-# MorMap 1.0.6
+# MorMap 1.1.0
 
 MorMap is a LibreNMS plugin for logical network diagrams, physical location plans and reusable device images.
 
@@ -10,7 +10,7 @@ Run the following command as the `librenms` user from your LibreNMS installation
 lnms plugin:add morivasaraki/mormap
 ```
 
-MorMap is available on Packagist. The release tag for this version is `v1.0.6`.
+The release tag for this package is `v1.1.0`. Upload the archive contents to the repository root so `composer.json` is at the top level, then create the tag. The command above installs this version after Packagist has indexed that tag.
 
 Requirements: a working LibreNMS installation with its Composer plugin system, PHP 8.2 or later within PHP 8.x, and the PHP DOM and Fileinfo extensions. Composer resolves the required `librenms/plugin-interfaces` dependency. Open **MorMap** from the LibreNMS menu after installation.
 
@@ -36,13 +36,19 @@ Use **Help** or **F1** for the complete English and French guides included in th
 2. Open a LibreNMS dashboard you can edit, then choose **Add Widget → MorMap**.
 3. Open the new widget’s settings (pencil icon), select the published map and Save.
 
-Use the **MorMap** widget for MorMap publications. LibreNMS’s **Custom Map** widget lists its own native maps. Drafts appear in the MorMap selector after publishing. MorMap’s existing administrator and dashboard access permissions apply; publishing does not grant anonymous access. Dashboard widgets show the live map without toolbars, side panels, zoom badges, footers or notification bars and automatically fit the content when resized. Opening a published map directly retains its normal controls. Device and port monitoring and hover details remain active in both views.
+Use the **MorMap** widget for MorMap publications. LibreNMS’s **Custom Map** widget lists its own native maps. Drafts appear in the MorMap selector after publishing. Authenticated non-admin users can view published maps subject to their LibreNMS device permissions and dashboard access; publishing does not grant anonymous access. Dashboard widgets show the live map without toolbars, side panels, zoom badges, footers or notification bars and automatically fit the content when resized. Opening a published map directly retains its normal controls. Device and port monitoring and hover details remain active in both views.
+
+## Viewing permissions
+
+Administrators retain all editing tools. Other authenticated users open MorMap's published-map list from the menu and can view permitted Logical and Physical publications, including dashboard embeds. LibreNMS users with global read access can view all published maps. A restricted user must have LibreNMS permission to view every monitored device placed on the map; a map containing no monitored devices requires global read or administrator access. VM guest details and remote equipment are filtered by device permissions. Unpublished physical placement metadata is not exposed to readers.
+
+Dashboard access follows LibreNMS's dashboard policy. Widget settings require permission to update that dashboard. Publishing never enables anonymous access or gives readers permission to edit a draft.
 
 ## Data and upgrades
 
 MorMap stores maps, uploaded images, physical plans and infrastructure records under `storage/app/mormap` in the LibreNMS installation. Back up this directory and your LibreNMS Composer configuration and lock files before upgrading. Save drafts and close open MorMap editor tabs before replacing the installed version.
 
-Version 1.0.6 preserves the data format of 1.0.0–1.0.5, including route-cache recovery and menu error protection. The public package name is `morivasaraki/mormap`; the internal plugin identifier remains `portmap`, and existing `/plugin/mormap` URLs and storage paths are retained.
+Version 1.1.0 remains compatible with maps from 1.0.0–1.0.9, including route-cache recovery and menu error protection. The public package name is `morivasaraki/mormap`; the internal plugin identifier remains `portmap`, and existing `/plugin/mormap` URLs and storage paths are retained.
 
 When upgrading from 0.9.8 or earlier, the first infrastructure load separates Logical and Physical connections into schema 2 and retains the original graph in `infrastructure/graph-before-topology-v2.json`. Restoring a pre-0.9.9 release requires its matching pre-upgrade data backup. An existing custom Composer path repository may continue to select its local package; migrate that repository configuration before switching such an installation to the public package.
 
@@ -53,6 +59,40 @@ MorMap is licensed under the [MIT License](LICENSE). Bundled libraries and fonts
 Concept, design and development: **Morteza VASARAKI** — [GitHub](https://github.com/MoriVASARAKI).
 
 Official reference: [LibreNMS plugin packages](https://docs.librenms.org/Extensions/Plugin-System/).
+
+## 1.1.0 changes
+
+- Restore **Unpublish** in Logical, with publication revision checks and Undo/Redo. Removing a publication preserves its editable draft and shared connections. Route-cache recovery includes the new action.
+- Allow authenticated non-admin viewing through the MorMap menu, published maps and dashboard widget, using LibreNMS device and dashboard permissions. Drafts, library management and configuration remain administrative.
+- Removing a Physical connection point, equipment placement or location from a view preserves shared cables. Explicit cable deletion and Disconnect still disconnect the selected relationship.
+- Undo/Redo of shared infrastructure changes and Unpublish preserves the current draft geometry and pending edits instead of reloading an older saved layout.
+- Temporarily disable interaction during map loading to prevent a delayed Reload response from overwriting newly accepted edits.
+- Save independent positions for free-standing equipment in each Physical Cabling context. Moving it there preserves its normal location coordinates; default placement remains unchanged.
+- Physical **Fit content** includes manual cable detours, information boxes, labels and backgrounds.
+- Permit unrelated edits to a map containing a previously saved interface that LibreNMS deleted or reassigned. Retain its drawing and inventory warning. New invalid bindings or connections remain rejected.
+- Retain existing VM eligibility, Show VMs, OS icons, cable advisories, topology separation, manual routes, layouts and the fifty-action Undo history. Non-admin cross-plan location links open permitted published Physical plans.
+
+## 1.0.9 changes
+
+- **Show VMs** in a hypervisor’s right-click menu now expands or collapses its guest group directly on the map, retaining its saved position, size and guest selection. It does not open the configuration panel.
+- The same action is available in Logical and Physical editors, published maps and LibreNMS dashboard widgets. In published maps and widgets, toggles are temporary and do not modify drafts or published data. Dashboard fitting includes expanded groups.
+- Host and guest selection now checks both LibreNMS OS classification and device type. Devices must be classified as servers without a conflicting non-server type; switches and other incompatible devices cannot be assigned as hosts, VMs or containers. The picker explains unavailable choices, and the server validates every assignment before saving the batch. Server classification permits manual membership; it does not automatically discover whether a server is virtual or which host owns it.
+- Previously saved incompatible assignments are retained with **Review VM assignments** warnings. Use **Unlink** to remove a wrong membership, or assign a valid guest to its correct hypervisor. Undo remains available. An invalid switch assignment no longer makes the switch a recognized hypervisor.
+- A recognized host without assigned guests displays an empty group. Existing OS icons, assignment controls, manual positioning, cables and other menus are retained.
+
+## 1.0.8 changes
+
+- Add **Show VMs** at the top of a hypervisor’s right-click menu in Logical and Physical. A host is recognized by existing MorMap guest assignments or LibreNMS virtualization discovery; a normal Linux/Windows OS or a device name alone does not make it a hypervisor.
+- Show LibreNMS OS icons before guest names in the guest list and map groups, including Linux distribution and custom device icons resolved by LibreNMS. Existing group controls, monitoring status, membership, cables and saved layouts are retained.
+
+## 1.0.7 changes
+
+- Associate existing LibreNMS devices with a hypervisor as VMs or containers in Logical and Physical. Choose a device, open **Properties → Virtual machines / containers → Assign LibreNMS devices**, select the guests, then apply. VMID is optional and entered manually. No hypervisor API or additional credentials are required.
+- The host badge opens a searchable guest list with VM/CT filters, OS, IP and current LibreNMS monitoring status. Up/Down describes monitoring reachability, not the guest power state. Missing inventory is shown as unavailable and its membership is retained for review.
+- Select guests and choose **Show selected on map**. Drag the group header or resize its lower-right corner. Several groups can be open. Save retains positions per map, hypervisor and Physical location/view. Collapse/expand and refresh preserve placement; dotted membership lines are independent of cables.
+- Assignments are shared between workspaces and saved immediately with Undo/Redo. Unlink removes membership, preserving the LibreNMS device, map placements and connections. Reassigning shows the previous host and explicitly moves the selected guest. Map group layout uses normal Save, Undo and Publish. Published viewers can inspect and temporarily expand/collapse without writing changes.
+- Visible cable strokes, white outlines and dotted membership lines scale with zoom, eliminating oversized cable outlines when zooming out. Invisible cable selection targets retain their usable screen width. Cable routes, formatting values and topology rules are retained.
+- Add route-cache recovery for the new guest API. Existing map files without guest groups load unchanged; new membership data is stored under `storage/app/mormap/virtualization/guests.json`.
 
 ## 1.0.6 changes
 

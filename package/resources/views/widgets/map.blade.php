@@ -5,7 +5,7 @@
 @else
     <div class="alert alert-info">
         @if ($mormap_map)
-            The selected MorMap map is no longer published. Open this widget's settings and select another map.
+            The selected MorMap map is not published or is unavailable with your current permissions. A dashboard editor can select another accessible map in this widget's settings.
         @else
             Open this widget's settings and select a published MorMap map.
         @endif

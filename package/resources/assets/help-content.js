@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 const data={
-  "version": "1.0.6",
+  "version": "1.1.0",
   "groups": {
     "start": {
       "en": "Get started",
@@ -60,6 +60,71 @@ const data={
     }
   },
   "topics": [
+{
+  "id": "virtual-guests",
+  "scopes": [
+    "logical",
+    "physical"
+  ],
+  "group": "build",
+  "tags": "VM CT Proxmox Hyper-V hypervisor guest virtual machine container",
+  "related": [
+    "shared-model",
+    "save-documents"
+  ],
+  "en": {
+    "title": "Virtual machines and containers",
+    "intro": "Manually associate existing LibreNMS devices with their hypervisor, without changing network connections.",
+    "sections": [
+      {
+        "title": "Assign and inspect",
+        "steps": [
+          "Select the hypervisor device. Open Properties → Virtual machines / containers → Assign LibreNMS devices.",
+          "Hosts and guests must have a server-compatible OS and device type in LibreNMS. Switches and incompatible or unidentified devices are unavailable, with the reason shown. Membership remains manual: select only the actual guests of this hypervisor. Old incompatible assignments display Review VM assignments; use Unlink to remove them or move a valid guest to the correct host. Undo remains available.",
+          "Search LibreNMS, select the guests, choose VM or CT and optionally enter a VMID. Apply the selection. A guest already assigned elsewhere shows the host it will move from.",
+          "Right-click a recognized hypervisor and choose Show VMs to expand or collapse its guest group on the map. This also works in published maps and dashboard widgets, where changes affect only the current view. The group keeps its saved position. Click the host badge to open the guest list. Guest names display their LibreNMS OS icons. Filter VMs / CTs or search by name, VMID, OS and IP. Status is the LibreNMS monitoring state, not the guest power state."
+        ]
+      },
+      {
+        "title": "Arrange groups on the map",
+        "steps": [
+          "Select guests in the Map column and choose Show selected on map. Dotted lines represent host membership.",
+          "Drag the group header to move the whole group independently of the host and cables. Resize from its lower-right corner. Several groups can stay expanded.",
+          "Save the map to retain positions per hypervisor and map. Physical saves separate layouts for each location / cabling view. Collapse and expand retain the placement. Fit content includes expanded groups."
+        ]
+      },
+      {
+        "note": "Assignments are shared by Logical and Physical and saved immediately with Undo. Unlink removes membership without deleting a device or cable. Map layout uses normal Save / Undo / Publish. Published views permit temporary expansion and filtering without editing stored data. Missing LibreNMS devices remain listed as unavailable."
+      }
+    ]
+  },
+  "fr": {
+    "title": "Machines virtuelles et conteneurs",
+    "intro": "Associez manuellement les périphériques LibreNMS à leur hyperviseur sans modifier les connexions réseau.",
+    "sections": [
+      {
+        "title": "Associer et consulter",
+        "steps": [
+          "Sélectionnez l’hyperviseur, puis Properties → Virtual machines / containers → Assign LibreNMS devices.",
+          "L’OS et le type de périphérique LibreNMS doivent correspondre à un serveur. Les commutateurs et les périphériques incompatibles ou non identifiés sont indisponibles, avec le motif affiché. L’association reste manuelle : sélectionnez les véritables invités de cet hôte. Les anciennes associations incompatibles portent la mention Review VM assignments. Utilisez Unlink ou réaffectez un invité valide à son hôte correct ; Undo reste disponible.",
+          "Recherchez et sélectionnez les invités, choisissez VM ou CT et renseignez éventuellement le VMID. Validez. Un invité déjà associé affiche son hyperviseur précédent avant le déplacement.",
+          "Faites un clic droit sur un hyperviseur reconnu et choisissez Show VMs pour afficher ou masquer son groupe sur la carte, à sa position enregistrée. Cela fonctionne aussi dans les publications et les widgets du dashboard, uniquement pour la vue courante. Le badge ouvre la liste des invités. Les noms affichent leur icône de système LibreNMS. Filtrez par VM / CT, système ou IP. L’état provient de la supervision LibreNMS, pas de l’alimentation de la VM."
+        ]
+      },
+      {
+        "title": "Organiser la carte",
+        "steps": [
+          "Cochez les invités dans la colonne Map et cliquez sur Show selected on map. Les pointillés représentent l’appartenance à l’hôte.",
+          "Déplacez le groupe par son en-tête et redimensionnez-le par le coin inférieur droit, indépendamment de l’hôte et des câbles. Plusieurs groupes peuvent rester ouverts.",
+          "Enregistrez la carte pour conserver la position. Chaque carte, hyperviseur et vue Physical possède sa disposition. Réduire puis développer conserve la position."
+        ]
+      },
+      {
+        "note": "Les associations sont partagées entre Logical et Physical et enregistrées immédiatement avec Undo. Unlink conserve le périphérique et les câbles. La disposition utilise Save / Undo / Publish. Une publication permet une consultation temporaire sans écriture. Les périphériques retirés restent indiqués comme indisponibles."
+      }
+    ]
+  }
+},
     {
       "id": "logical-start",
       "scopes": [
@@ -2269,11 +2334,12 @@ const data={
               "Choose Publish. Open the returned viewer link or the corresponding entry in the LibreNMS Maps menu.",
               "Check the published layout. Viewers can navigate, pan, inspect information, trace available physical paths and export; editing controls are unavailable.",
               "After changing the draft layout, Save and Publish again to update its published snapshot.",
+              "Choose Unpublish to remove the published copy while preserving the draft and connections. Undo restores the publication.",
               "To add it to a LibreNMS dashboard, choose Add Widget → MorMap. Open the widget settings, select the published Logical or Physical map, and Save. Custom Map is the separate LibreNMS map widget."
             ]
           },
           {
-            "note": "Publication freezes the layout, not monitoring or shared cable connectivity. Viewer access follows the existing LibreNMS/plugin access rules; a viewer URL does not itself create public access."
+            "note": "Publication freezes the layout, not monitoring or shared cable connectivity. Authenticated readers need LibreNMS permission to view all monitored devices placed on the map, or global read access. Maps without monitored devices require global read access. Editing remains administrative; a viewer URL does not create public access."
           }
         ]
       },
@@ -2288,11 +2354,12 @@ const data={
               "Choisissez Publish. Ouvrez le lien de consultation ou l’entrée correspondante du menu Maps de LibreNMS.",
               "Vérifiez la disposition publiée. Les lecteurs peuvent naviguer, déplacer la vue, consulter les informations, tracer les chemins physiques disponibles et exporter ; les commandes d’édition sont indisponibles.",
               "Après modification de la disposition du brouillon, utilisez Save puis Publish pour actualiser sa publication.",
+              "Choisissez Unpublish pour retirer la publication en conservant le brouillon et les connexions. Undo rétablit la publication.",
               "Pour l’ajouter à un tableau de bord LibreNMS, choisissez Add Widget → MorMap. Ouvrez les paramètres du widget, sélectionnez la carte Logical ou Physical publiée, puis Save. Custom Map est le widget distinct des cartes natives LibreNMS."
             ]
           },
           {
-            "note": "La publication fige la disposition, pas la supervision ni la connectivité partagée. L’accès suit les règles de LibreNMS et du plugin ; le lien ne rend pas à lui seul la carte publique."
+            "note": "La publication fige la disposition, pas la supervision ni la connectivité partagée. Les lecteurs authentifiés doivent pouvoir consulter tous les équipements LibreNMS placés sur la carte, ou disposer d’un accès global en lecture. Une carte sans équipement supervisé exige cet accès global. L’édition reste réservée aux administrateurs ; le lien ne rend pas la carte publique."
           }
         ]
       }

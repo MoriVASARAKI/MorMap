@@ -9,16 +9,26 @@ use PortMap\LibreNMS\PortMapServiceProvider;
 use PortMap\LibreNMS\Storage\InfrastructureStore;
 use PortMap\LibreNMS\Support\AssetLibrary;
 use PortMap\LibreNMS\Support\DeviceStatus;
+use PortMap\LibreNMS\Support\MapAccess;
 final class InfrastructureController extends Controller
 {
     public function __construct()
     {
-        $this->middleware(function(Request $request,$next){abort_unless(app(PluginManagerInterface::class)->pluginEnabled(PortMapServiceProvider::SLUG),404);abort_unless($request->user()?->can('admin')===true,403);return $next($request);});
+        $this->middleware(function(Request $request,$next){abort_unless(app(PluginManagerInterface::class)->pluginEnabled(PortMapServiceProvider::SLUG),404);abort_unless($request->user() && ($request->user()->can('admin') || $request->route()->getActionMethod()==='port'),403);return $next($request);});
     }
     public function undo(Request $request)
     {
         $data=$request->validate(['token'=>['required','regex:/^[a-f0-9]{48}$/D']]);
-        try{return response()->json((new \PortMap\LibreNMS\Storage\UndoStore(storage_path('app/mormap')))->revert($data['token']));}
+        try{
+            $result=(new \PortMap\LibreNMS\Storage\UndoStore(storage_path('app/mormap')))->revert($data['token']);
+            $result['infrastructure']=(new InfrastructureStore(storage_path('app/mormap')))->snapshot();
+            $context=$result['context']??[];
+            if(($context['action']??'')==='unpublish'){
+                $directory=($context['workspace']??'logical')==='physical'?'physical/published':'published';
+                $result['published_revision']=(new \PortMap\LibreNMS\Storage\MapStore(storage_path('app/mormap/'.$directory)))->read($context['map_id'])['revision']??null;
+            }
+            return response()->json($result);
+        }
         catch(\UnexpectedValueException $e){abort(409,$e->getMessage());}catch(\InvalidArgumentException $e){abort(422,$e->getMessage());}
     }
     public function index(){return response()->json((new InfrastructureStore(storage_path('app/mormap')))->snapshot());}
@@ -29,7 +39,21 @@ final class InfrastructureController extends Controller
         try{return response()->json((new InfrastructureStore(storage_path('app/mormap')))->addComponent($data,(int)$data['revision']),201);}
         catch(\UnexpectedValueException $e){abort(409,$e->getMessage());}catch(\InvalidArgumentException $e){abort(422,$e->getMessage());}
     }
-    public function port(int $port){return response()->json(DeviceStatus::details($port));}
+    public function port(int $port)
+    {
+        $owner=DB::table('ports')->where('port_id',$port)->where('deleted',0)->value('device_id');abort_unless($owner,404);
+        $access=new MapAccess();abort_unless($access->allowedDeviceIds([(int)$owner]),403);
+        $data=DeviceStatus::details($port);
+        if(!$access->globalRead()){
+            $owners=DB::table('ports')->whereIn('port_id',array_column($data['neighbors'],'remote_port_id'))->pluck('device_id','port_id')->all();
+            $allowed=array_fill_keys($access->allowedDeviceIds([...array_column($data['neighbors'],'remote_device_id'),...array_values($owners)]),true);
+            $data['neighbors']=array_values(array_filter($data['neighbors'],function($n)use($owners,$allowed){
+                $id=(int)($n['remote_device_id']??0);$portOwner=(int)($owners[$n['remote_port_id']??0]??0);
+                return ($id||$portOwner)&&(!$id||isset($allowed[$id]))&&(!$portOwner||isset($allowed[$portOwner]));
+            }));
+        }
+        return response()->json($data);
+    }
     public function addPort(Request $request)
     {
         $data=$request->validate(['revision'=>'required|integer|min:1','device_ref'=>['required','string','max:70','regex:/^(?:lnms:device:[1-9][0-9]*|mm:device:[a-f0-9-]{36})$/D'],'label'=>'required|string|max:120','kind'=>'required|in:ethernet,sfp,sfp+,qsfp,management,console,power,fiber,stack','paired'=>'sometimes|boolean','stack_member'=>'sometimes|nullable|integer|between:1,64']);

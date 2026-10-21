@@ -8,6 +8,7 @@ use PortMap\LibreNMS\PortMapServiceProvider;
 use PortMap\LibreNMS\Storage\MapStore;
 use PortMap\LibreNMS\Storage\InfrastructureStore;
 use PortMap\LibreNMS\Support\DeviceStatus;
+use PortMap\LibreNMS\Support\MapAccess;
 use PortMap\LibreNMS\Support\AssetLibrary;
 use PortMap\LibreNMS\Support\PublishedMaps;
 
@@ -18,7 +19,7 @@ final class PublishedMapController extends Controller
     {
         $this->middleware(function (Request $request, $next) {
             abort_unless(app(PluginManagerInterface::class)->pluginEnabled(PortMapServiceProvider::SLUG), 404);
-            abort_unless($request->user()?->can('admin') === true, 403);
+            abort_unless($request->user() && ($request->user()->can('admin') || in_array($request->route()->getActionMethod(), ['index', 'home', 'load', 'status', 'image'], true)), 403);
             return $next($request);
         });
     }
@@ -26,6 +27,7 @@ final class PublishedMapController extends Controller
     {
         $map = (new MapStore(storage_path('app/mormap/published')))->read($id);
         abort_if($map === null, 404);
+        (new MapAccess())->assertView($map);
         return $map + ['canvas' => ['width' => 1920, 'height' => 1080]];
     }
     public function index()
@@ -40,12 +42,12 @@ final class PublishedMapController extends Controller
             'mormapVersion' => PortMapServiceProvider::VERSION, 'readOnly' => true,
             'viewerBase' => route('mormap.viewer', ['id' => $id])]);
     }
-    public function load(string $id) { return response()->json((new InfrastructureStore(storage_path('app/mormap')))->decorate($this->map($id))); }
+    public function load(string $id) { return response()->json((new MapAccess())->decorate($this->map($id), (new InfrastructureStore(storage_path('app/mormap')))->snapshot())); }
     public function status(string $id)
     {
         $map = $this->map($id);
         return response()->json([
-            'infrastructure'=>(new InfrastructureStore(storage_path('app/mormap')))->snapshot(),
+            'infrastructure'=>(new MapAccess())->graph((new InfrastructureStore(storage_path('app/mormap')))->snapshot(), $map),
             'devices' => DeviceStatus::devices(array_values(array_unique(array_column($map['nodes'], 'device_id')))),
             'ports' => DeviceStatus::portsForDevices(array_values(array_unique(array_column($map['nodes'], 'device_id')))),
         ]);
