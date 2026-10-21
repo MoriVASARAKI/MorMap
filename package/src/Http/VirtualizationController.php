@@ -10,10 +10,7 @@ use LibreNMS\Util\Url;
 use PortMap\LibreNMS\PortMapServiceProvider;
 use PortMap\LibreNMS\Storage\VirtualizationStore;
 use PortMap\LibreNMS\Support\DeviceStatus;
-<<<<<<< HEAD
 use PortMap\LibreNMS\Support\MapAccess;
-=======
->>>>>>> 205c4a9e3b5b393617424e3776e9fa1bb9129d20
 use PortMap\LibreNMS\Support\VirtualizationEligibility;
 
 final class VirtualizationController extends Controller
@@ -22,11 +19,7 @@ final class VirtualizationController extends Controller
     {
         $this->middleware(function (Request $request, $next) {
             abort_unless(app(PluginManagerInterface::class)->pluginEnabled(PortMapServiceProvider::SLUG),404);
-<<<<<<< HEAD
             abort_unless($request->user() && ($request->user()->can('admin') || $request->route()->getActionMethod()==='index'),403);
-=======
-            abort_unless($request->user()?->can('admin')===true,403);
->>>>>>> 205c4a9e3b5b393617424e3776e9fa1bb9129d20
             return $next($request);
         });
     }
@@ -60,15 +53,10 @@ final class VirtualizationController extends Controller
     public function index(Request $request)
     {
         $v=$request->validate(['hosts'=>'sometimes|array|max:500','hosts.*'=>'integer|min:1|distinct']);
-<<<<<<< HEAD
         $access=new MapAccess();$hosts=$access->allowedDeviceIds($v['hosts']??[]); $state=$this->store()->snapshot();
         $rows=array_values(array_filter($state['assignments'],fn($g)=>in_array($g['host_id'],$hosts,true)||in_array($g['device_id'],$hosts,true)));
         $allowed=array_fill_keys($access->allowedDeviceIds([...$hosts,...array_column($rows,'device_id'),...array_column($rows,'host_id')]),true);
         $rows=array_values(array_filter($rows,fn($g)=>isset($allowed[$g['host_id']],$allowed[$g['device_id']])));
-=======
-        $hosts=array_map('intval',$v['hosts']??[]); $state=$this->store()->snapshot();
-        $rows=array_values(array_filter($state['assignments'],fn($g)=>in_array($g['host_id'],$hosts,true)||in_array($g['device_id'],$hosts,true)));
->>>>>>> 205c4a9e3b5b393617424e3776e9fa1bb9129d20
         return response()->json(['revision'=>$state['revision'],'assignments'=>$rows,'devices'=>$this->records([...$hosts,...array_column($rows,'device_id'),...array_column($rows,'host_id')])]);
     }
     public function devices(Request $request)

@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 # MorMap 1.1.0
-=======
-# MorMap 1.0.9
->>>>>>> 205c4a9e3b5b393617424e3776e9fa1bb9129d20
 
 MorMap is a LibreNMS plugin for logical network diagrams, physical location plans and reusable device images.
 
@@ -14,11 +10,7 @@ Run the following command as the `librenms` user from your LibreNMS installation
 lnms plugin:add morivasaraki/mormap
 ```
 
-<<<<<<< HEAD
 The release tag for this package is `v1.1.0`. Upload the archive contents to the repository root so `composer.json` is at the top level, then create the tag. The command above installs this version after Packagist has indexed that tag.
-=======
-MorMap is available on Packagist. The release tag for this version is `v1.0.9`.
->>>>>>> 205c4a9e3b5b393617424e3776e9fa1bb9129d20
 
 Requirements: a working LibreNMS installation with its Composer plugin system, PHP 8.2 or later within PHP 8.x, and the PHP DOM and Fileinfo extensions. Composer resolves the required `librenms/plugin-interfaces` dependency. Open **MorMap** from the LibreNMS menu after installation.
 
@@ -56,11 +48,7 @@ Dashboard access follows LibreNMS's dashboard policy. Widget settings require pe
 
 MorMap stores maps, uploaded images, physical plans and infrastructure records under `storage/app/mormap` in the LibreNMS installation. Back up this directory and your LibreNMS Composer configuration and lock files before upgrading. Save drafts and close open MorMap editor tabs before replacing the installed version.
 
-<<<<<<< HEAD
 Version 1.1.0 remains compatible with maps from 1.0.0–1.0.9, including route-cache recovery and menu error protection. The public package name is `morivasaraki/mormap`; the internal plugin identifier remains `portmap`, and existing `/plugin/mormap` URLs and storage paths are retained.
-=======
-Version 1.0.9 remains compatible with maps from 1.0.0–1.0.8, including route-cache recovery and menu error protection. The public package name is `morivasaraki/mormap`; the internal plugin identifier remains `portmap`, and existing `/plugin/mormap` URLs and storage paths are retained.
->>>>>>> 205c4a9e3b5b393617424e3776e9fa1bb9129d20
 
 When upgrading from 0.9.8 or earlier, the first infrastructure load separates Logical and Physical connections into schema 2 and retains the original graph in `infrastructure/graph-before-topology-v2.json`. Restoring a pre-0.9.9 release requires its matching pre-upgrade data backup. An existing custom Composer path repository may continue to select its local package; migrate that repository configuration before switching such an installation to the public package.
 
@@ -72,7 +60,6 @@ Concept, design and development: **Morteza VASARAKI** — [GitHub](https://githu
 
 Official reference: [LibreNMS plugin packages](https://docs.librenms.org/Extensions/Plugin-System/).
 
-<<<<<<< HEAD
 ## 1.1.0 changes
 
 - Restore **Unpublish** in Logical, with publication revision checks and Undo/Redo. Removing a publication preserves its editable draft and shared connections. Route-cache recovery includes the new action.
@@ -85,8 +72,6 @@ Official reference: [LibreNMS plugin packages](https://docs.librenms.org/Extensi
 - Permit unrelated edits to a map containing a previously saved interface that LibreNMS deleted or reassigned. Retain its drawing and inventory warning. New invalid bindings or connections remain rejected.
 - Retain existing VM eligibility, Show VMs, OS icons, cable advisories, topology separation, manual routes, layouts and the fifty-action Undo history. Non-admin cross-plan location links open permitted published Physical plans.
 
-=======
->>>>>>> 205c4a9e3b5b393617424e3776e9fa1bb9129d20
 ## 1.0.9 changes
 
 - **Show VMs** in a hypervisor’s right-click menu now expands or collapses its guest group directly on the map, retaining its saved position, size and guest selection. It does not open the configuration panel.
