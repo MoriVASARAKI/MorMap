@@ -5,6 +5,14 @@ namespace PortMap\LibreNMS\Support;
 /** Shared membership and cable metadata, independent of a drawing's coordinates. */
 final class TopologySchema
 {
+    /** Optional image-scoped Asset Library slot identity; old maps remain valid. */
+    public static function assetKey(array $port): array
+    {
+        if (!array_key_exists('asset_key', $port)) return [];
+        $key = $port['asset_key'];
+        if (!is_string($key) || !preg_match('/^[A-Za-z0-9_-]{1,100}:[A-Za-z0-9_-]{1,64}$/D', $key)) throw new \InvalidArgumentException('Invalid asset port identity.');
+        return ['asset_key' => $key];
+    }
     public static function member(mixed $value): int
     {
         if (!is_int($value) || $value < 1 || $value > 64) throw new \InvalidArgumentException('Stack member must be 1–64.');

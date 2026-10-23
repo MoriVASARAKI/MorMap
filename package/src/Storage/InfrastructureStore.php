@@ -207,7 +207,7 @@ final class InfrastructureStore
             foreach(['image_width','image_height','width_mm','rack_units','image_fit'] as $field)if(isset($device[$field]))$profile[$field]=$device[$field];
             $incoming=$workspace==='physical'?$device['ports']:array_values(array_filter($map['anchors'],fn($a)=>$a['node_id']===$device['id']));
             $ports=[];if(($previous['image']??null)===$device['image'])foreach($previous['ports']??[] as $port)$ports[self::portRef($port)]=$port;
-            foreach($incoming as $port){$r=self::portRef($port);$ports[$r]=['port_id'=>$port['port_id']??null,'port_ref'=>$r,'label'=>$port['label'],'x'=>$port['x'],'y'=>$port['y']];}
+            foreach($incoming as $port){$r=self::portRef($port);$ports[$r]=['port_id'=>$port['port_id']??null,'port_ref'=>$r,'label'=>$port['label'],'x'=>$port['x'],'y'=>$port['y']]+TopologySchema::assetKey($port)+(isset($ports[$r]['asset_key'])?['asset_key'=>$ports[$r]['asset_key']]:[]);}
             if(isset($device['stack_member']))$ports=array_filter($ports,fn($p)=>!isset($graph['ports'][self::portRef($p)]['stack_member'])||$graph['ports'][self::portRef($p)]['stack_member']===$device['stack_member']);
             $profile['ports']=array_values($ports);$oldRevision=$previous['revision']??0;unset($profile['revision'],$previous['revision']);
             $profile['revision']=$profile===$previous?max(1,$oldRevision):$oldRevision+1;

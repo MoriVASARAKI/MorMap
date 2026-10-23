@@ -4,18 +4,48 @@
 const copy=v=>JSON.parse(JSON.stringify(v)),ref=d=>d.device_id?'lnms:device:'+Number(d.device_id):d.object_id,port=p=>p.port_id?'lnms:port:'+Number(p.port_id):p.port_ref;
 function uuid(){if(globalThis.crypto?.randomUUID)return crypto.randomUUID();const bytes=crypto.getRandomValues(new Uint8Array(16));bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;const h=Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');return h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20);}
 const key=d=>d.stack_member?'member:'+Number(d.stack_member):'main';
-function profile(graph,d){const device=graph?.devices?.[ref(d)],exact=device?.profiles?.[key(d)];if(exact)return exact;const legacy=device?.profiles?.main||device?.presentation;if(!d.stack_member||d.stack_member===1)return legacy||null;if(legacy&&!device?.stack){const ports=(legacy.ports||[]).filter(p=>memberOf(p)===Number(d.stack_member));if(ports.length)return {...legacy,revision:0,label:'',ports};}return null;}
+function device(graph,d){return !d.stack_member&&graph?.devices?.[ref(d)]?.stack?{...d,stack_member:1}:d;}
+function profile(graph,d){d=device(graph,d);const record=graph?.devices?.[ref(d)],exact=record?.profiles?.[key(d)];if(exact)return exact;const legacy=record?.profiles?.main||record?.presentation;if(!d.stack_member||d.stack_member===1)return legacy||null;if(legacy&&!record?.stack){const ports=(legacy.ports||[]).filter(p=>memberOf(p)===Number(d.stack_member));if(ports.length)return {...legacy,revision:0,label:'',ports};}return null;}
 function placement(d){return ref(d)+'/'+key(d);}
 function duplicate(items,d){return items.some(v=>ref(v)===ref(d)&&(!v.stack_member||!d.stack_member||v.stack_member===d.stack_member));}
 function memberOf(p){const m=String(p.ifName||p.ifDescr||p.label||'').match(/^(?:Gi(?:gabitEthernet)?|Te(?:nGigabitEthernet)?|Twe(?:ntyFiveGigE)?|Fo(?:rtyGigabitEthernet)?|Hu(?:ndredGigE)?|Eth(?:ernet)?|Fa(?:stEthernet)?)(\d+)\/\d+\/\d+/i);return m?Number(m[1]):null;}
 function memberPorts(ports,graph,d,items=[],scope='member'){
+ d=device(graph,d);
  const transferable=p=>d.stack_member&&!graph?.devices?.[ref(d)]?.stack&&memberOf(p)===Number(d.stack_member);
  const other=new Set();for(const item of items)if(ref(item)===ref(d)&&key(item)!==key(d)&&!(d.stack_member===1&&!item.stack_member))for(const p of item.ports||[])if(!transferable(p))other.add(port(p));
  const profiles=graph?.devices?.[ref(d)]?.profiles||{};for(const [k,p]of Object.entries(profiles))if(k!==key(d)&&!(k==='main'&&d.stack_member===1))for(const v of p.ports||[])if(!transferable(v))other.add(port(v));
  return ports.filter(p=>{const assigned=p.stack_member||graph?.ports?.[port(p)]?.stack_member;return !other.has(port(p))&&(!assigned||!d.stack_member||Number(assigned)===Number(d.stack_member))&&(!d.stack_member||scope==='all'||(assigned?Number(assigned)===Number(d.stack_member):memberOf(p)===null||memberOf(p)===Number(d.stack_member)));});
 }
+function portInventory(ports,graph,d,items=[],scope='member'){
+ if(!Array.isArray(ports))throw Error('Invalid LibreNMS port response. Reload ports.');
+ return {ports:memberPorts(ports,graph,d,items,scope),total:ports.length};
+}
 async function withSavedAssets(assets,graph,fetchAsset){const ids=new Set();for(const d of Object.values(graph?.devices||{})){if(d.image)ids.add(d.image);if(d.presentation?.image)ids.add(d.presentation.image);for(const p of Object.values(d.profiles||{}))if(p.image)ids.add(p.image);}const missing=[...ids].filter(id=>!assets.some(a=>a.id===id));for(const asset of await Promise.all(missing.map(fetchAsset)))assets.push(asset);return assets;}
-function savedSlots(asset,graph,d){const p=profile(graph,d);return p?.image===asset?.id&&p.ports?.length?copy(p.ports.filter(v=>v.port_id)):copy(asset?.ports||[]);}
+function savedSlots(asset,graph,d,placed){
+ const p=profile(graph,d),saved=copy(placed??(p?.image===asset?.id?p.ports||[]:[])).filter(v=>v.port_id);
+ const original=copy(asset?.ports||[]);
+ const slots=copy(original).map(s=>({...s,asset_key:asset.id+':'+s.key})),used=new Set(),bound=new Set();
+ // Asset order is authoritative. Saved identities and hand-adjusted coordinates
+ // are overlaid onto those slots; old profile array order is never a slot order.
+ const attach=(i,v)=>{slots[i]={...slots[i],port_id:v.port_id,port_ref:port(v),x:v.x,y:v.y,...(v.comment?{comment:v.comment}:{})};used.add(v);bound.add(i);};
+ for(const [i,s]of slots.entries()){
+  const found=saved.filter(v=>v.asset_key===s.asset_key);
+  if(found.length===1&&!used.has(found[0]))attach(i,found[0]);
+ }
+ for(const [i,s]of slots.entries())if(!bound.has(i)){
+  const found=saved.filter(v=>!used.has(v)&&!v.asset_key&&Math.abs(v.x-s.x)<1e-8&&Math.abs(v.y-s.y)<1e-8);
+  if(found.length===1&&original.filter(t=>Math.abs(t.x-s.x)<1e-8&&Math.abs(t.y-s.y)<1e-8).length===1)attach(i,found[0]);
+ }
+ // Legacy maps have no asset key. Use an unambiguous interface label after
+ // coordinate matching, keeping its existing position and exact port identity.
+ const remaining=saved.filter(v=>!used.has(v)&&!v.asset_key);
+ const mapping=root.MorMapPortMapping||(typeof require==='function'?require('./port-mapping.js'):null);
+ if(mapping)for(const row of mapping.match(slots.filter((s,i)=>!bound.has(i)),remaining.map(v=>({...v,ifName:v.label}))))if(row.port){
+  const v=remaining.find(v=>Number(v.port_id)===Number(row.port.port_id));if(v&&!used.has(v))attach(slots.indexOf(row.slot),v);
+ }
+ // Keep manually added or unmatched saved positions without guessing a new ID.
+ return [...slots,...saved.filter(v=>!used.has(v))];
+}
 function promote(map,workspace,added){if(!added.stack_member)return;const logical=workspace==='logical',items=logical?map.nodes:map.equipment;for(const d of items)if(d!==added&&ref(d)===ref(added)&&!d.stack_member){d.stack_member=1;if(!/ · M\d+$/.test(d.label))d.label+=' · M1';}
  if(added.stack_member===1)return;
  if(logical){for(const p of [...map.anchors]){const owner=items.find(n=>n.id===p.node_id);if(owner===added||ref(owner||{})!==ref(added)||owner.stack_member!==1||memberOf(p)!==Number(added.stack_member))continue;const fresh=map.anchors.find(a=>a.node_id===added.id&&port(a)===port(p));if(fresh){p.x=fresh.x;p.y=fresh.y;map.anchors=map.anchors.filter(a=>a!==fresh);}p.node_id=added.id;}}
@@ -30,7 +60,7 @@ function applyProfiles(map,graph,workspace,geometry){
   if(!logical)for(const field of ['image_width','image_height','width_mm','image_fit'])if(p[field]!==undefined)d[field]=p[field];
   if(!logical&&p.rack_units!==undefined){const rack=map.locations.find(l=>l.id===d.parent_id),height=p.rack_units,safe=rack?.type!=='rack'||(d.rack_u+height-1<=rack.metadata.capacity&&!items.some(e=>e.id!==d.id&&e.parent_id===d.parent_id&&d.rack_u<e.rack_u+e.rack_units&&d.rack_u+height>e.rack_u));if(safe){d.rack_units=height;delete d.profile_warning;}else d.profile_warning='Shared height changed. Move this device to free rack space before applying the new height.';}
   const existing=logical?map.anchors.filter(a=>a.node_id===d.id):(d.ports||=[]),hidden=new Set(d.hidden_ports||[]);
-  for(const s of p.ports||[]){if(hidden.has(port(s)))continue;const found=existing.find(a=>port(a)===port(s));if(found){Object.assign(found,{x:s.x,y:s.y,label:s.label,port_ref:port(s)});}else{
+  for(const s of p.ports||[]){if(hidden.has(port(s)))continue;const found=existing.find(a=>port(a)===port(s));if(found){Object.assign(found,{x:s.x,y:s.y,label:s.label,port_ref:port(s),...(s.asset_key?{asset_key:s.asset_key}:{})});}else{
     const owner=logical?map.anchors.some(a=>port(a)===port(s)):items.some(e=>(e.ports||[]).some(a=>port(a)===port(s)));if(owner)continue;
     const point={...copy(s),port_ref:port(s)};if(logical){point.id=uuid();point.node_id=d.id;map.anchors.push(point);}else d.ports.push(point);
   }}
@@ -55,6 +85,6 @@ function locationLinks(map,current){
 }
 function validateStack(c,items,anchors){if(c.kind!=='stack')return;const owner=r=>anchors?items.find(d=>d.id===anchors.find(a=>a.id===r)?.node_id):items.find(d=>(d.ports||[]).some(p=>port(p)===r));const a=owner(c.source),b=owner(c.target);if(!a?.stack_member||!b?.stack_member||ref(a)!==ref(b)||a.stack_member===b.stack_member)return 'Stack cable endpoints are not distinct members of the same stack. Verify the stack assignment.';}
 function cableLabel({parent,shape,G,U,points,type,format,cable,graph,refs,state,scale=1}){const names=[...new Set(refs.flatMap(r=>portGroups(graph,r).map(g=>g.name)))],label=[cable.name||cable.media?.reference||(cable.kind==='stack'?'STACK':''),...names].filter(Boolean).join(' · ');if(!label||points.length<2)return;const p=G.cableTrack(points,type,format).position(.5),width=(U.measureText(label,10)+30)*scale,g=shape('g',{'data-cable-label':cable.id});g.append(shape('rect',{x:p.x-width/2,y:p.y-11*scale,width,height:22*scale,rx:4*scale,fill:'#fff',stroke:cable.kind==='stack'?'#7c3aed':'#a6bac7','stroke-width':.8*scale}),shape('circle',{cx:p.x-width/2+9*scale,cy:p.y,r:3*scale,fill:state.color}),shape('text',{x:p.x-width/2+18*scale,y:p.y+3.5*scale,'font-size':10*scale,fill:'#365169'},label),shape('title',{},state.label));parent.append(g);}
-const api={uuid,ref,port,key,profile,placement,duplicate,memberOf,memberPorts,savedSlots,withSavedAssets,restoreBindings,promote,applyProfiles,groups,portGroups,groupState,locationLinks,validateStack,cableLabel};
+const api={uuid,ref,port,key,device,profile,placement,duplicate,memberOf,memberPorts,portInventory,savedSlots,withSavedAssets,restoreBindings,promote,applyProfiles,groups,portGroups,groupState,locationLinks,validateStack,cableLabel};
 if(typeof module!=='undefined')module.exports=api;else root.MorMapTopology=api;
 })(typeof window==='undefined'?globalThis:window);

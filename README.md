@@ -1,4 +1,4 @@
-# MorMap 1.1.0
+# MorMap 1.1.2
 
 MorMap is a LibreNMS plugin for logical network diagrams, physical location plans and reusable device images.
 
@@ -10,7 +10,7 @@ Run the following command as the `librenms` user from your LibreNMS installation
 lnms plugin:add morivasaraki/mormap
 ```
 
-The release tag for this package is `v1.1.0`. Upload the archive contents to the repository root so `composer.json` is at the top level, then create the tag. The command above installs this version after Packagist has indexed that tag.
+The release tag for this package is `v1.1.2`. Upload the archive contents to the repository root so `composer.json` is at the top level, then create the tag. The command above installs this version after Packagist has indexed that tag.
 
 Requirements: a working LibreNMS installation with its Composer plugin system, PHP 8.2 or later within PHP 8.x, and the PHP DOM and Fileinfo extensions. Composer resolves the required `librenms/plugin-interfaces` dependency. Open **MorMap** from the LibreNMS menu after installation.
 
@@ -19,6 +19,42 @@ If MorMap was previously disabled, enable its existing internal plugin identifie
 ```bash
 lnms plugin:enable portmap
 ```
+
+## Local installation before publishing
+
+The same package can be installed through `lnms` before a GitHub tag or Packagist release exists. Register its extracted directory as a Composer path repository for the **librenms** user, then use the normal plugin command. This is a local package source, not a fully offline LibreNMS installation; Composer may still need network access for dependencies.
+
+Save drafts and close MorMap tabs. Back up `storage/app/mormap`, `composer.json`, `composer.lock`, and `composer.plugins.json` (if present). Keep the local source directory until switching back to the public release.
+
+For example, upload the ZIP to `/tmp/mormap-1.1.2.zip`. As root, extract it into a new directory readable by `librenms`:
+
+```bash
+unzip /tmp/mormap-1.1.2.zip -d /opt/mormap-1.1.2
+su - librenms
+```
+
+As **librenms**:
+
+```bash
+cd /opt/librenms
+php scripts/composer_wrapper.php config --global repositories.mormap-local '{"type":"path","url":"/opt/mormap-1.1.2","options":{"symlink":false,"versions":{"morivasaraki/mormap":"1.1.2"}}}'
+lnms plugin:add morivasaraki/mormap '^1.1.2'
+php scripts/composer_wrapper.php show morivasaraki/mormap
+```
+
+The final command must report **1.1.2**. Reopen MorMap and check **Help** for **1.1.2**. The paths above are examples; the archive does not need to be uploaded to `/root`. Extract the package once without mixing files from older releases. `composer.json` must be directly inside `/opt/mormap-1.1.2`.
+
+After the **v1.1.2** tag has been published and indexed by Packagist, switch back to the public repository as **librenms**:
+
+```bash
+cd /opt/librenms
+php scripts/composer_wrapper.php config --global --unset repositories.mormap-local
+lnms plugin:add morivasaraki/mormap '^1.1.2'
+```
+
+Check the installation output and `composer.lock` before removing the extracted directory: MorMap should now use a GitHub distribution rather than a local path. A global path repository takes precedence over Packagist while configured. Existing custom repositories for MorMap must also be reviewed if Composer selects an unexpected source.
+
+References: [LibreNMS maintainer's local plugin example](https://github.com/murrant/librenms-example-plugin), [Composer path repositories and explicit local versions](https://getcomposer.org/doc/05-repositories.md#path).
 
 ## Workspaces
 
@@ -48,7 +84,7 @@ Dashboard access follows LibreNMS's dashboard policy. Widget settings require pe
 
 MorMap stores maps, uploaded images, physical plans and infrastructure records under `storage/app/mormap` in the LibreNMS installation. Back up this directory and your LibreNMS Composer configuration and lock files before upgrading. Save drafts and close open MorMap editor tabs before replacing the installed version.
 
-Version 1.1.0 remains compatible with maps from 1.0.0–1.0.9, including route-cache recovery and menu error protection. The public package name is `morivasaraki/mormap`; the internal plugin identifier remains `portmap`, and existing `/plugin/mormap` URLs and storage paths are retained.
+Version 1.1.2 remains compatible with maps from 1.0.0–1.1.1, including route-cache recovery and menu error protection. The public package name is `morivasaraki/mormap`; the internal plugin identifier remains `portmap`, and existing `/plugin/mormap` URLs and storage paths are retained.
 
 When upgrading from 0.9.8 or earlier, the first infrastructure load separates Logical and Physical connections into schema 2 and retains the original graph in `infrastructure/graph-before-topology-v2.json`. Restoring a pre-0.9.9 release requires its matching pre-upgrade data backup. An existing custom Composer path repository may continue to select its local package; migrate that repository configuration before switching such an installation to the public package.
 
@@ -59,6 +95,15 @@ MorMap is licensed under the [MIT License](LICENSE). Bundled libraries and fonts
 Concept, design and development: **Morteza VASARAKI** — [GitHub](https://github.com/MoriVASARAKI).
 
 Official reference: [LibreNMS plugin packages](https://docs.librenms.org/Extensions/Plugin-System/).
+
+## 1.1.2 changes
+
+- Fix the Add Device form excluding a known Stack's own first-member interfaces when it initially opens in Standalone mode. The form now restores the known Stack presentation; interfaces assigned to other members remain separate.
+- Display binding rows in Asset Library point order, including newly added points. Overlay saved port IDs and manual coordinates instead of replacing the Asset's point list with an older device profile.
+- Preserve current bindings when reopening Bind image ports in Logical and Physical. An optional image-scoped slot identity keeps newly saved bindings associated with their Asset points, including after labels or coordinates change. Legacy maps remain supported; ambiguous old positions are retained without guessing or deleting them.
+- Keep explicit Unbound selections and manual assignments when Reload ports succeeds. Failed requests retain the displayed inventory. Missing saved port IDs are identified as unavailable and restored when that same ID returns; they are not silently mapped to another interface.
+- Distinguish raw LibreNMS inventory counts from interfaces available after Stack filtering. Fill by interface order uses eligible inventory and remains unavailable when there are no eligible interfaces. Hardware / all-interface scope, natural name order, SNMP index order, duplicate-port checks and existing topology rules are retained.
+- Align the visible version and Help version at 1.1.2. No map data reset, cable deletion, layout redesign, VM behavior change or permission change is part of this release.
 
 ## 1.1.0 changes
 

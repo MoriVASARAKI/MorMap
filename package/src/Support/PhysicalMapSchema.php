@@ -98,7 +98,7 @@ final class PhysicalMapSchema
                 $ports[$ref] = true;
                 $item['ports'][] = ['port_id' => $id, 'port_ref'=>$ref, 'label' => self::text($port['label'] ?? '', 255, 'Port label'),
                     'x' => self::number($port['x'] ?? null, 0, 1, 'Port X'), 'y' => self::number($port['y'] ?? null, 0, 1, 'Port Y'),
-                    'comment' => self::text($port['comment'] ?? '', 4000, 'Connection-point comment')]+self::commentBoxes($port);
+                    'comment' => self::text($port['comment'] ?? '', 4000, 'Connection-point comment')]+self::commentBoxes($port)+TopologySchema::assetKey($port);
             }
             self::expect(count($ports) <= 12000, 'Too many mapped ports in this plan.');
             $map['equipment'][] = $item;
