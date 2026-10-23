@@ -1,4 +1,4 @@
-# MorMap 1.1.4
+# MorMap 1.1.5
 
 MorMap is a LibreNMS plugin for logical network diagrams, physical location plans and reusable device images.
 
@@ -10,7 +10,7 @@ Run the following command as the `librenms` user from your LibreNMS installation
 lnms plugin:add morivasaraki/mormap
 ```
 
-The release tag for this package is `v1.1.4`. Upload the archive contents to the repository root so `composer.json` is at the top level, then create the tag. The command above installs this version after Packagist has indexed that tag.
+The release tag for this package is `v1.1.5`. Upload the archive contents to the repository root so `composer.json` is at the top level, then create the tag. The command above installs this version after Packagist has indexed that tag.
 
 Requirements: a working LibreNMS installation with its Composer plugin system, PHP 8.2 or later within PHP 8.x, and the PHP DOM and Fileinfo extensions. Composer resolves the required `librenms/plugin-interfaces` dependency. Open **MorMap** from the LibreNMS menu after installation.
 
@@ -26,10 +26,10 @@ The same package can be installed through `lnms` before a GitHub tag or Packagis
 
 Save drafts and close MorMap tabs. Back up `storage/app/mormap`, `composer.json`, `composer.lock`, and `composer.plugins.json` (if present). Keep the local source directory until switching back to the public release.
 
-For example, upload the ZIP to `/tmp/mormap-1.1.4.zip`. As root, extract it into a new directory readable by `librenms`:
+For example, upload the ZIP to `/tmp/mormap-1.1.5.zip`. As root, extract it into a new directory readable by `librenms`:
 
 ```bash
-unzip /tmp/mormap-1.1.4.zip -d /opt/mormap-1.1.4
+unzip /tmp/mormap-1.1.5.zip -d /opt/mormap-1.1.5
 su - librenms
 ```
 
@@ -37,19 +37,19 @@ As **librenms**:
 
 ```bash
 cd /opt/librenms
-php scripts/composer_wrapper.php config --global repositories.mormap-local '{"type":"path","url":"/opt/mormap-1.1.4","options":{"symlink":false,"versions":{"morivasaraki/mormap":"1.1.4"}}}'
-lnms plugin:add morivasaraki/mormap '^1.1.4'
+php scripts/composer_wrapper.php config --global repositories.mormap-local '{"type":"path","url":"/opt/mormap-1.1.5","options":{"symlink":false,"versions":{"morivasaraki/mormap":"1.1.5"}}}'
+lnms plugin:add morivasaraki/mormap '^1.1.5'
 php scripts/composer_wrapper.php show morivasaraki/mormap
 ```
 
-The final command must report **1.1.4**. Reopen MorMap and check **Help** for **1.1.4**. The paths above are examples; the archive does not need to be uploaded to `/root`. Extract the package once without mixing files from older releases. `composer.json` must be directly inside `/opt/mormap-1.1.4`.
+The final command must report **1.1.5**. Reopen MorMap and check **Help** for **1.1.5**. The paths above are examples; the archive does not need to be uploaded to `/root`. Extract the package once without mixing files from older releases. `composer.json` must be directly inside `/opt/mormap-1.1.5`.
 
-After the **v1.1.4** tag has been published and indexed by Packagist, switch back to the public repository as **librenms**:
+After the **v1.1.5** tag has been published and indexed by Packagist, switch back to the public repository as **librenms**:
 
 ```bash
 cd /opt/librenms
 php scripts/composer_wrapper.php config --global --unset repositories.mormap-local
-lnms plugin:add morivasaraki/mormap '^1.1.4'
+lnms plugin:add morivasaraki/mormap '^1.1.5'
 ```
 
 Check the installation output and `composer.lock` before removing the extracted directory: MorMap should now use a GitHub distribution rather than a local path. A global path repository takes precedence over Packagist while configured. Existing custom repositories for MorMap must also be reviewed if Composer selects an unexpected source.
@@ -84,7 +84,7 @@ Dashboard access follows LibreNMS's dashboard policy. Widget settings require pe
 
 MorMap stores maps, uploaded images, physical plans and infrastructure records under `storage/app/mormap` in the LibreNMS installation. Back up this directory and your LibreNMS Composer configuration and lock files before upgrading. Save drafts and close open MorMap editor tabs before replacing the installed version.
 
-Version 1.1.4 remains compatible with maps from 1.0.0–1.1.3, including route-cache recovery and menu error protection. The public package name is `morivasaraki/mormap`; the internal plugin identifier remains `portmap`, and existing `/plugin/mormap` URLs and storage paths are retained.
+Version 1.1.5 remains compatible with maps from 1.0.0–1.1.4, including route-cache recovery and menu error protection. The public package name is `morivasaraki/mormap`; the internal plugin identifier remains `portmap`, and existing `/plugin/mormap` URLs and storage paths are retained.
 
 When upgrading from 0.9.8 or earlier, the first infrastructure load separates Logical and Physical connections into schema 2 and retains the original graph in `infrastructure/graph-before-topology-v2.json`. Restoring a pre-0.9.9 release requires its matching pre-upgrade data backup. An existing custom Composer path repository may continue to select its local package; migrate that repository configuration before switching such an installation to the public package.
 
@@ -95,6 +95,18 @@ MorMap is licensed under the [MIT License](LICENSE). Bundled libraries and fonts
 Concept, design and development: **Morteza VASARAKI** — [GitHub](https://github.com/MoriVASARAKI).
 
 Official reference: [LibreNMS plugin packages](https://docs.librenms.org/Extensions/Plugin-System/).
+
+## 1.1.5 changes
+
+- Shared Logical and Physical drawing tools: rectangle, ellipse, line, arrow, double arrow, polygon and multiline text. Drawings retain their current location and Layout/Cabling view.
+- Eight resize handles, exact position/size/rotation, fill, outline, dash, opacity, rounded corners and text styling. Select several drawings to align/distribute them, duplicate them, lock position or change front/back layering. Ctrl/Cmd+D duplicates selected drawings. Save, Undo/Redo, published maps, dashboard views and SVG exports retain annotations.
+- **Parallel cable routes…** in the cable context menu previews selected orthogonal routes with configurable spacing and corridor position. Cable IDs and actual endpoint bindings remain unchanged. Duct and collapsed-cluster route segments also support exact numeric placement.
+
+- Cluster frames have a saved position and size in map coordinates. Select the header and drag any corner or edge to resize. Expanded and collapsed sizes are independent. Zoom no longer changes frame geometry, and resizing does not move or scale hosts or their cables. **Fit cluster frame to hosts** is an explicit context-menu action.
+- Moving a cluster translates its hosts and internal routes. External cable corridors and external shared ducts stay in place while their endpoint connections follow the hosts. This avoids moving the switch end of a carefully arranged route.
+- Cables shown at a collapsed cluster have their own editable presentation routes. Click a cable, then drag its segment or bend handles; right-click to add/remove a bend or reset that displayed route. Expanded cable routes are preserved.
+- Duct branches exit equipment boundaries before joining the corridor. Cables from one collapsed cluster share a single branch to the duct; the switch end retains every actual port connection. Click a branch to edit its route independently of the duct trunk. Manual branch routes are saved separately for expanded and collapsed views.
+- Group sizes and route edits participate in Save, Undo/Redo, publication and exports. Published maps and dashboard viewers keep read-only expand/collapse behavior. Existing 1.1.4 groups require no migration command; their frame is retained when first edited.
 
 ## 1.1.4 changes
 

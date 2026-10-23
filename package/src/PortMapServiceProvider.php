@@ -12,7 +12,7 @@ use PortMap\LibreNMS\Hooks\PortMapMenu;
 final class PortMapServiceProvider extends ServiceProvider
 {
     public const SLUG = 'portmap';
-    public const VERSION = '1.1.4';
+    public const VERSION = '1.1.5';
 
     /**
      * A route cache created before MorMap was installed does not contain the

@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 const data={
-  "version": "1.1.4",
+  "version": "1.1.5",
   "groups": {
     "start": {
       "en": "Get started",
@@ -60,148 +60,152 @@ const data={
     }
   },
   "topics": [
-{
-  "id": "clusters-ducts",
-  "scopes": [
-    "logical",
-    "physical"
-  ],
-  "group": "build",
-  "tags": "cluster Proxmox Hyper-V ESXi KVM group duct bundle cables icon",
-  "related": [
-    "virtual-guests",
-    "save-documents"
-  ],
-  "en": {
-    "title": "Clusters and cable ducts",
-    "intro": "Group existing hosts and simplify cable routes without merging equipment, ports or connections.",
-    "sections": [
-      {
-        "title": "Create and arrange a cluster",
-        "steps": [
-          "Select hosts with Ctrl/Shift-click. Right-click → Create cluster… and choose members, a name, a color and an icon.",
-          "Use a built-in platform icon or import an image in Asset Library and select it under Cluster icon. Right-click the header → Cluster properties to edit the group.",
-          "Drag the header to move the group, whether expanded or collapsed. Relative host positions, internal cable routes and saved VM-group positions move together. External endpoints remain attached to their ports.",
-          "Click the chevron to collapse or expand. Ungroup hosts removes the group without deleting any host or connection. In Physical, groups belong to the current location/cabling view. Moving rack members changes their drawing placement, not their rack U allocation."
+    {
+      "id": "clusters-ducts",
+      "scopes": [
+        "logical",
+        "physical"
+      ],
+      "group": "build",
+      "tags": "cluster Proxmox Hyper-V ESXi KVM group duct bundle cables icon",
+      "related": [
+        "virtual-guests",
+        "save-documents"
+      ],
+      "en": {
+        "title": "Clusters and cable ducts",
+        "intro": "Group existing hosts and simplify cable routes without merging equipment, ports or connections.",
+        "sections": [
+          {
+            "title": "Create and arrange a cluster",
+            "steps": [
+              "Select hosts with Ctrl/Shift-click. Right-click → Create cluster… and choose members, a name, a color and an icon.",
+              "Use a built-in platform icon or import an image in Asset Library and select it under Cluster icon. Right-click the header → Cluster properties to edit the group.",
+              "Drag the header to move the group, whether expanded or collapsed. Relative host positions, internal cable routes and saved VM-group positions move together. External cable corridors stay fixed and endpoints remain attached to their ports.",
+              "Select the header and drag a corner or edge to resize the frame without moving hosts. Expanded and collapsed sizes are saved independently and stay stable when zooming. Right-click → Fit cluster frame to hosts fits the frame explicitly.",
+              "Click the chevron to collapse or expand. Ungroup hosts removes the group without deleting any host or connection. In Physical, groups belong to the current location/cabling view. Moving rack members changes their drawing placement, not their rack U allocation."
+            ]
+          },
+          {
+            "title": "Put cables into a duct",
+            "steps": [
+              "Select cables with Ctrl/Shift-click, then right-click → Create cable duct…. Select at least two cables and choose a name, color and width.",
+              "The shared duct route replaces the crowded middle of the drawing; branches remain attached to the real endpoints. Cable IDs, bindings, original routes and independent monitoring are retained.",
+              "Drag the duct to move its route. Select/right-click it to expose bend and segment handles. Drag the handles; use Add duct bend here or Remove duct bend for more control.",
+              "Click a branch or a cable at a collapsed cluster to reveal its own route handles. Drag a segment/bend or right-click → Add route bend here. Reset this displayed route removes that manual route. Collapsed cluster cables share one branch; actual switch ports stay separate.",
+              "Click the duct label to show the original individual routes or bundle again. Right-click → View cables and status to inspect each member. Release all cables removes the duct without deleting its cables."
+            ]
+          },
+          {
+            "title": "Save, share and monitoring",
+            "steps": [
+              "Apply the dialog, then Save. Publish again to update the public and dashboard views. Undo/Redo includes group membership, movement and duct routing.",
+              "Published readers can expand/collapse clusters and ducts in their own view without writing changes to the saved map. Print/Export captures the current presentation.",
+              "Cluster colors identify groups. Host monitoring counts do not imply HA, quorum or replication health. Duct labels flag cables whose monitoring state needs review."
+            ]
+          }
         ]
       },
-      {
-        "title": "Put cables into a duct",
-        "steps": [
-          "Select cables with Ctrl/Shift-click, then right-click → Create cable duct…. Select at least two cables and choose a name, color and width.",
-          "The shared duct route replaces the crowded middle of the drawing; branches remain attached to the real endpoints. Cable IDs, bindings, original routes and independent monitoring are retained.",
-          "Drag the duct to move its route. Select/right-click it to expose bend and segment handles. Drag the handles; use Add duct bend here or Remove duct bend for more control.",
-          "Click the duct label to show the original individual routes or bundle again. Right-click → View cables and status to inspect each member. Release all cables removes the duct without deleting its cables."
-        ]
-      },
-      {
-        "title": "Save, share and monitoring",
-        "steps": [
-          "Apply the dialog, then Save. Publish again to update the public and dashboard views. Undo/Redo includes group membership, movement and duct routing.",
-          "Published readers can expand/collapse clusters and ducts in their own view without writing changes to the saved map. Print/Export captures the current presentation.",
-          "Cluster colors identify groups. Host monitoring counts do not imply HA, quorum or replication health. Duct labels flag cables whose monitoring state needs review."
+      "fr": {
+        "title": "Clusters et gaines de câbles",
+        "intro": "Regroupez les hôtes et simplifiez les chemins de câbles en conservant chaque équipement, port et connexion.",
+        "sections": [
+          {
+            "title": "Créer et déplacer un cluster",
+            "steps": [
+              "Sélectionnez les hôtes avec Ctrl/Maj-clic. Clic droit → Create cluster… : choisissez les membres, le nom, la couleur et une icône.",
+              "Choisissez Proxmox, Hyper-V, ESXi, KVM ou une icône générique. Pour une icône personnalisée, importez une image dans Asset Library puis sélectionnez-la dans Cluster icon.",
+              "Déplacez le groupe par son en-tête, ouvert ou replié. Les positions relatives des hôtes, les chemins internes et les groupes de VMs enregistrés suivent le déplacement. Les chemins externes restent en place et les extrémités restent attachées aux ports.",
+              "Sélectionnez l’en-tête, puis déplacez un coin ou un bord pour redimensionner le cadre sans déplacer les hôtes. Les tailles ouverte et repliée sont indépendantes et restent stables au zoom. Fit cluster frame to hosts ajuste le cadre aux hôtes.",
+              "La flèche ouvre ou replie le groupe. Ungroup hosts conserve les hôtes et les câbles. Dans Physical, la position du dessin est propre à la vue ; le déplacement des hôtes en baie ne modifie pas leurs unités U."
+            ]
+          },
+          {
+            "title": "Regrouper les câbles dans une gaine",
+            "steps": [
+              "Sélectionnez les câbles avec Ctrl/Maj-clic puis clic droit → Create cable duct…. Choisissez au moins deux câbles, un nom, une couleur et une largeur.",
+              "La gaine représente un chemin commun avec des branches vers les vrais ports. Les identités, connexions, chemins individuels et états restent indépendants.",
+              "Déplacez la gaine ou ses poignées de segment et de coude. Le menu permet aussi Add duct bend here et Remove duct bend.",
+              "Cliquez sur une branche ou un câble d’un cluster replié pour afficher ses poignées. Déplacez un segment ou un coude ; Add route bend here ajoute un coude, Reset this displayed route réinitialise ce chemin. Un cluster replié utilise une branche commune, les vrais ports du switch restent distincts.",
+              "Cliquez sur son étiquette pour afficher les chemins individuels ou les regrouper. View cables and status détaille les membres. Release all cables libère les câbles sans les supprimer."
+            ]
+          },
+          {
+            "title": "Enregistrement et publication",
+            "steps": [
+              "Apply puis Save. Publiez de nouveau pour actualiser la carte publiée et le dashboard. Undo/Redo couvre les groupes et les gaines.",
+              "Dans une carte publiée, ouvrir ou replier un groupe change la vue locale sans modifier la publication. Les exports reprennent la présentation affichée.",
+              "La couleur du cluster est descriptive. Les compteurs des hôtes ne mesurent pas la santé HA ou le quorum. Une gaine signale les câbles dont l’état nécessite une vérification."
+            ]
+          }
         ]
       }
-    ]
-  },
-  "fr": {
-    "title": "Clusters et gaines de câbles",
-    "intro": "Regroupez les hôtes et simplifiez les chemins de câbles en conservant chaque équipement, port et connexion.",
-    "sections": [
-      {
-        "title": "Créer et déplacer un cluster",
-        "steps": [
-          "Sélectionnez les hôtes avec Ctrl/Maj-clic. Clic droit → Create cluster… : choisissez les membres, le nom, la couleur et une icône.",
-          "Choisissez Proxmox, Hyper-V, ESXi, KVM ou une icône générique. Pour une icône personnalisée, importez une image dans Asset Library puis sélectionnez-la dans Cluster icon.",
-          "Déplacez le groupe par son en-tête, ouvert ou replié. Les positions relatives des hôtes, les chemins internes et les groupes de VMs enregistrés suivent le déplacement. Les autres extrémités des câbles restent attachées à leurs ports.",
-          "La flèche ouvre ou replie le groupe. Ungroup hosts conserve les hôtes et les câbles. Dans Physical, la position du dessin est propre à la vue ; le déplacement des hôtes en baie ne modifie pas leurs unités U."
+    },
+    {
+      "id": "virtual-guests",
+      "scopes": [
+        "logical",
+        "physical"
+      ],
+      "group": "build",
+      "tags": "VM CT Proxmox Hyper-V hypervisor guest virtual machine container",
+      "related": [
+        "shared-model",
+        "save-documents"
+      ],
+      "en": {
+        "title": "Virtual machines and containers",
+        "intro": "Manually associate existing LibreNMS devices with their hypervisor, without changing network connections.",
+        "sections": [
+          {
+            "title": "Assign and inspect",
+            "steps": [
+              "Select the hypervisor device. Open Properties → Virtual machines / containers → Assign LibreNMS devices.",
+              "Hosts and guests must have a server-compatible OS and device type in LibreNMS. Switches and incompatible or unidentified devices are unavailable, with the reason shown. Membership remains manual: select only the actual guests of this hypervisor. Old incompatible assignments display Review VM assignments; use Unlink to remove them or move a valid guest to the correct host. Undo remains available.",
+              "Search LibreNMS, select the guests, choose VM or CT and optionally enter a VMID. Apply the selection. A guest already assigned elsewhere shows the host it will move from.",
+              "Right-click a recognized hypervisor and choose Show VMs to expand or collapse its guest group on the map. This also works in published maps and dashboard widgets, where changes affect only the current view. The group keeps its saved position. Click the host badge to open the guest list. Guest names display their LibreNMS OS icons. Filter VMs / CTs or search by name, VMID, OS and IP. Status is the LibreNMS monitoring state, not the guest power state."
+            ]
+          },
+          {
+            "title": "Arrange groups on the map",
+            "steps": [
+              "Select guests in the Map column and choose Show selected on map. Dotted lines represent host membership.",
+              "Drag the group header to move the whole group independently of the host and cables. Resize from its lower-right corner. Several groups can stay expanded.",
+              "Save the map to retain positions per hypervisor and map. Physical saves separate layouts for each location / cabling view. Collapse and expand retain the placement. Fit content includes expanded groups."
+            ]
+          },
+          {
+            "note": "Assignments are shared by Logical and Physical and saved immediately with Undo. Unlink removes membership without deleting a device or cable. Map layout uses normal Save / Undo / Publish. Published views permit temporary expansion and filtering without editing stored data. Missing LibreNMS devices remain listed as unavailable."
+          }
         ]
       },
-      {
-        "title": "Regrouper les câbles dans une gaine",
-        "steps": [
-          "Sélectionnez les câbles avec Ctrl/Maj-clic puis clic droit → Create cable duct…. Choisissez au moins deux câbles, un nom, une couleur et une largeur.",
-          "La gaine représente un chemin commun avec des branches vers les vrais ports. Les identités, connexions, chemins individuels et états restent indépendants.",
-          "Déplacez la gaine ou ses poignées de segment et de coude. Le menu permet aussi Add duct bend here et Remove duct bend.",
-          "Cliquez sur son étiquette pour afficher les chemins individuels ou les regrouper. View cables and status détaille les membres. Release all cables libère les câbles sans les supprimer."
-        ]
-      },
-      {
-        "title": "Enregistrement et publication",
-        "steps": [
-          "Apply puis Save. Publiez de nouveau pour actualiser la carte publiée et le dashboard. Undo/Redo couvre les groupes et les gaines.",
-          "Dans une carte publiée, ouvrir ou replier un groupe change la vue locale sans modifier la publication. Les exports reprennent la présentation affichée.",
-          "La couleur du cluster est descriptive. Les compteurs des hôtes ne mesurent pas la santé HA ou le quorum. Une gaine signale les câbles dont l’état nécessite une vérification."
+      "fr": {
+        "title": "Machines virtuelles et conteneurs",
+        "intro": "Associez manuellement les périphériques LibreNMS à leur hyperviseur sans modifier les connexions réseau.",
+        "sections": [
+          {
+            "title": "Associer et consulter",
+            "steps": [
+              "Sélectionnez l’hyperviseur, puis Properties → Virtual machines / containers → Assign LibreNMS devices.",
+              "L’OS et le type de périphérique LibreNMS doivent correspondre à un serveur. Les commutateurs et les périphériques incompatibles ou non identifiés sont indisponibles, avec le motif affiché. L’association reste manuelle : sélectionnez les véritables invités de cet hôte. Les anciennes associations incompatibles portent la mention Review VM assignments. Utilisez Unlink ou réaffectez un invité valide à son hôte correct ; Undo reste disponible.",
+              "Recherchez et sélectionnez les invités, choisissez VM ou CT et renseignez éventuellement le VMID. Validez. Un invité déjà associé affiche son hyperviseur précédent avant le déplacement.",
+              "Faites un clic droit sur un hyperviseur reconnu et choisissez Show VMs pour afficher ou masquer son groupe sur la carte, à sa position enregistrée. Cela fonctionne aussi dans les publications et les widgets du dashboard, uniquement pour la vue courante. Le badge ouvre la liste des invités. Les noms affichent leur icône de système LibreNMS. Filtrez par VM / CT, système ou IP. L’état provient de la supervision LibreNMS, pas de l’alimentation de la VM."
+            ]
+          },
+          {
+            "title": "Organiser la carte",
+            "steps": [
+              "Cochez les invités dans la colonne Map et cliquez sur Show selected on map. Les pointillés représentent l’appartenance à l’hôte.",
+              "Déplacez le groupe par son en-tête et redimensionnez-le par le coin inférieur droit, indépendamment de l’hôte et des câbles. Plusieurs groupes peuvent rester ouverts.",
+              "Enregistrez la carte pour conserver la position. Chaque carte, hyperviseur et vue Physical possède sa disposition. Réduire puis développer conserve la position."
+            ]
+          },
+          {
+            "note": "Les associations sont partagées entre Logical et Physical et enregistrées immédiatement avec Undo. Unlink conserve le périphérique et les câbles. La disposition utilise Save / Undo / Publish. Une publication permet une consultation temporaire sans écriture. Les périphériques retirés restent indiqués comme indisponibles."
+          }
         ]
       }
-    ]
-  }
-},
-{
-  "id": "virtual-guests",
-  "scopes": [
-    "logical",
-    "physical"
-  ],
-  "group": "build",
-  "tags": "VM CT Proxmox Hyper-V hypervisor guest virtual machine container",
-  "related": [
-    "shared-model",
-    "save-documents"
-  ],
-  "en": {
-    "title": "Virtual machines and containers",
-    "intro": "Manually associate existing LibreNMS devices with their hypervisor, without changing network connections.",
-    "sections": [
-      {
-        "title": "Assign and inspect",
-        "steps": [
-          "Select the hypervisor device. Open Properties → Virtual machines / containers → Assign LibreNMS devices.",
-          "Hosts and guests must have a server-compatible OS and device type in LibreNMS. Switches and incompatible or unidentified devices are unavailable, with the reason shown. Membership remains manual: select only the actual guests of this hypervisor. Old incompatible assignments display Review VM assignments; use Unlink to remove them or move a valid guest to the correct host. Undo remains available.",
-          "Search LibreNMS, select the guests, choose VM or CT and optionally enter a VMID. Apply the selection. A guest already assigned elsewhere shows the host it will move from.",
-          "Right-click a recognized hypervisor and choose Show VMs to expand or collapse its guest group on the map. This also works in published maps and dashboard widgets, where changes affect only the current view. The group keeps its saved position. Click the host badge to open the guest list. Guest names display their LibreNMS OS icons. Filter VMs / CTs or search by name, VMID, OS and IP. Status is the LibreNMS monitoring state, not the guest power state."
-        ]
-      },
-      {
-        "title": "Arrange groups on the map",
-        "steps": [
-          "Select guests in the Map column and choose Show selected on map. Dotted lines represent host membership.",
-          "Drag the group header to move the whole group independently of the host and cables. Resize from its lower-right corner. Several groups can stay expanded.",
-          "Save the map to retain positions per hypervisor and map. Physical saves separate layouts for each location / cabling view. Collapse and expand retain the placement. Fit content includes expanded groups."
-        ]
-      },
-      {
-        "note": "Assignments are shared by Logical and Physical and saved immediately with Undo. Unlink removes membership without deleting a device or cable. Map layout uses normal Save / Undo / Publish. Published views permit temporary expansion and filtering without editing stored data. Missing LibreNMS devices remain listed as unavailable."
-      }
-    ]
-  },
-  "fr": {
-    "title": "Machines virtuelles et conteneurs",
-    "intro": "Associez manuellement les périphériques LibreNMS à leur hyperviseur sans modifier les connexions réseau.",
-    "sections": [
-      {
-        "title": "Associer et consulter",
-        "steps": [
-          "Sélectionnez l’hyperviseur, puis Properties → Virtual machines / containers → Assign LibreNMS devices.",
-          "L’OS et le type de périphérique LibreNMS doivent correspondre à un serveur. Les commutateurs et les périphériques incompatibles ou non identifiés sont indisponibles, avec le motif affiché. L’association reste manuelle : sélectionnez les véritables invités de cet hôte. Les anciennes associations incompatibles portent la mention Review VM assignments. Utilisez Unlink ou réaffectez un invité valide à son hôte correct ; Undo reste disponible.",
-          "Recherchez et sélectionnez les invités, choisissez VM ou CT et renseignez éventuellement le VMID. Validez. Un invité déjà associé affiche son hyperviseur précédent avant le déplacement.",
-          "Faites un clic droit sur un hyperviseur reconnu et choisissez Show VMs pour afficher ou masquer son groupe sur la carte, à sa position enregistrée. Cela fonctionne aussi dans les publications et les widgets du dashboard, uniquement pour la vue courante. Le badge ouvre la liste des invités. Les noms affichent leur icône de système LibreNMS. Filtrez par VM / CT, système ou IP. L’état provient de la supervision LibreNMS, pas de l’alimentation de la VM."
-        ]
-      },
-      {
-        "title": "Organiser la carte",
-        "steps": [
-          "Cochez les invités dans la colonne Map et cliquez sur Show selected on map. Les pointillés représentent l’appartenance à l’hôte.",
-          "Déplacez le groupe par son en-tête et redimensionnez-le par le coin inférieur droit, indépendamment de l’hôte et des câbles. Plusieurs groupes peuvent rester ouverts.",
-          "Enregistrez la carte pour conserver la position. Chaque carte, hyperviseur et vue Physical possède sa disposition. Réduire puis développer conserve la position."
-        ]
-      },
-      {
-        "note": "Les associations sont partagées entre Logical et Physical et enregistrées immédiatement avec Undo. Unlink conserve le périphérique et les câbles. La disposition utilise Save / Undo / Publish. Une publication permet une consultation temporaire sans écriture. Les périphériques retirés restent indiqués comme indisponibles."
-      }
-    ]
-  }
-},
+    },
     {
       "id": "logical-start",
       "scopes": [
@@ -945,10 +949,11 @@ const data={
     {
       "id": "physical-drawing",
       "scopes": [
+        "logical",
         "physical"
       ],
       "group": "build",
-      "tags": "",
+      "tags": "drawing shapes arrow text align distribute lock layers parallel routes",
       "related": [
         "physical-locations",
         "physical-floor",
@@ -956,7 +961,7 @@ const data={
       ],
       "en": {
         "title": "Draw rooms, shapes and labels",
-        "intro": "Use simple drawing objects to explain the space around your equipment.",
+        "intro": "The same drawing tools are available in Logical and Physical, including Physical Cabling views.",
         "sections": [
           {
             "title": "Drawing tools",
@@ -971,8 +976,8 @@ const data={
                   "Choose the tool and drag across the desired area."
                 ],
                 [
-                  "Line",
-                  "Choose Line and drag from its start to its end."
+                  "Line / Arrow / Double arrow",
+                  "Choose the tool and drag from its start to its end. Arrows are annotations; they do not create network connections."
                 ],
                 [
                   "Polygon",
@@ -988,19 +993,28 @@ const data={
           {
             "title": "Refine the result",
             "steps": [
-              "Choose Select and click the object. Drag to move, resize with its handle, or edit exact geometry and rotation in Properties.",
-              "Set fill, outline, width and text properties as appropriate. Format Painter transfers compatible drawing styles.",
-              "Use Grid and Snap independently, then Save. Drawing tools switch to Layout so new drawings are visible."
+              "Select a drawing. Drag any of its eight handles to resize, including after rotation, or enter X/Y, width, height and rotation in Properties.",
+              "Set fill, outline width, dash, opacity and corner radius. Text supports multiple lines, size, bold, italic and alignment.",
+              "Ctrl/Cmd/Shift-click drawings to select several. Arrange drawings aligns them or distributes three or more with equal gaps. Duplicate drawings or Ctrl/Cmd+D creates copies. Bring to front / Send to back changes their layer.",
+              "Lock position protects against dragging, resizing and alignment; Properties remains available. Save, Undo/Redo, publication and SVG export retain drawings.",
+              "Use Grid and Snap independently. In Physical, each drawing stays in its location and Layout or Cabling view."
             ]
           },
           {
             "note": "A drawn rectangle is a drawing, not a location container. Create a ServerRoom or other location when you need equipment hierarchy and navigation."
+          },
+          {
+            "title": "Organize cable routes",
+            "steps": [
+              "Right-click a cable → Parallel cable routes… Select cables, direction, spacing and corridor position; inspect the preview before Apply. Real cable IDs and port connections stay unchanged.",
+              "Select a duct or collapsed-cluster cable to move its handles, or right-click a segment for an exact position. Duct branches can be edited separately from the shared trunk."
+            ]
           }
         ]
       },
       "fr": {
         "title": "Dessiner salles, formes et libellés",
-        "intro": "Utilisez des objets de dessin simples pour décrire l’espace autour des équipements.",
+        "intro": "Les mêmes outils de dessin sont disponibles dans Logical et Physical, y compris les vues Cabling.",
         "sections": [
           {
             "title": "Outils de dessin",
@@ -1015,8 +1029,8 @@ const data={
                   "Choisissez l’outil puis glissez sur la zone souhaitée."
                 ],
                 [
-                  "Line",
-                  "Choisissez Line puis glissez du début vers la fin."
+                  "Line / Arrow / Double arrow",
+                  "Choisissez l’outil et glissez du début vers la fin. Les flèches sont des annotations et ne créent pas de connexion réseau."
                 ],
                 [
                   "Polygon",
@@ -1032,13 +1046,22 @@ const data={
           {
             "title": "Ajuster le résultat",
             "steps": [
-              "Choisissez Select puis cliquez sur l’objet. Glissez pour déplacer, utilisez la poignée pour redimensionner, ou modifiez géométrie et rotation dans Properties.",
-              "Réglez le remplissage, le contour, son épaisseur et les propriétés du texte. Format Painter copie les styles compatibles.",
-              "Utilisez Grid et Snap indépendamment puis Save. Les outils de dessin passent en Layout pour afficher les nouveaux objets."
+              "Sélectionnez un dessin. Utilisez ses huit poignées, même après rotation, ou saisissez X/Y, largeur, hauteur et rotation dans Properties.",
+              "Réglez remplissage, contour, pointillés, opacité et rayon des coins. Le texte propose plusieurs lignes, taille, gras, italique et alignement.",
+              "Ctrl/Cmd/Shift-clic sélectionne plusieurs dessins. Arrange drawings aligne ou répartit au moins trois objets avec des espaces égaux. Duplicate drawings ou Ctrl/Cmd+D duplique. Bring to front / Send to back change le calque.",
+              "Lock position empêche déplacement, redimensionnement et alignement ; Properties reste disponible. Save, Undo/Redo, publication et export SVG conservent les dessins.",
+              "Grid et Snap restent indépendants. Dans Physical, chaque dessin reste dans son lieu et sa vue Layout ou Cabling."
             ]
           },
           {
             "note": "Un rectangle dessiné reste un dessin, pas un conteneur de localisation. Créez un ServerRoom ou un autre lieu pour organiser les équipements et la navigation."
+          },
+          {
+            "title": "Organiser les chemins des câbles",
+            "steps": [
+              "Clic droit sur un câble → Parallel cable routes… Choisissez câbles, direction, espacement et position du couloir ; vérifiez l’aperçu avant Apply. Les identifiants et ports restent inchangés.",
+              "Sélectionnez une gaine ou un câble de cluster replié pour déplacer ses poignées ; clic droit sur un segment permet une position exacte. Les branches se modifient séparément du tronc."
+            ]
           }
         ]
       }

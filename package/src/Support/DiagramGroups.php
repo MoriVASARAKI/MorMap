@@ -22,6 +22,20 @@ final class DiagramGroups
         return $value;
     }
 
+    private static function route(mixed $points): array
+    {
+        self::expect(is_array($points) && array_is_list($points) && count($points)>=2 && count($points)<=100, 'Routes need 2–100 points.');
+        $out=[];
+        foreach ($points as $p) {
+            self::expect(is_array($p), 'Invalid route point.');
+            $p=['x'=>self::number($p['x']??null),'y'=>self::number($p['y']??null)];
+            $last=end($out);
+            self::expect(!$last || abs($p['x']-$last['x'])<.01 || abs($p['y']-$last['y'])<.01, 'Group routes must be orthogonal.');
+            $out[]=$p;
+        }
+        return $out;
+    }
+
     private static function context(mixed $value, array $map): bool
     {
         self::expect(is_string($value) && (bool) preg_match('/^(?:logical|(?:location|cabling):(?:root|[a-f0-9-]{36}))$/D', $value), 'Invalid group context.');
@@ -63,8 +77,31 @@ final class DiagramGroups
                     $icon=$g['icon']??null;
                     self::expect(is_string($icon) && (in_array($icon,['proxmox','hyperv','esxi','kvm','other','none'],true) || (bool) preg_match('/^asset:(?:[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}|(?:symbol|stencil|logo)-[a-z0-9_-]{1,80})$/D', $icon)), 'Choose a cluster icon from the presets or Asset Library.');
                     $row['icon']=$icon;
+                    if (array_key_exists('frame',$g)) {
+                        self::expect(is_array($g['frame']), 'Invalid cluster frame.'); $f=$g['frame'];
+                        $row['frame']=['x'=>self::number($f['x']??null),'y'=>self::number($f['y']??null),'w'=>self::number($f['w']??null,220),'h'=>self::number($f['h']??null,100)];
+                    }
+                    if (array_key_exists('compact',$g)) {
+                        self::expect(is_array($g['compact']), 'Invalid collapsed cluster frame.'); $f=$g['compact'];
+                        $row['compact']=['w'=>self::number($f['w']??null,220),'h'=>self::number($f['h']??null,64)];
+                    }
+                    if (array_key_exists('routes',$g)) {
+                        self::expect(is_array($g['routes']) && count($g['routes'])<=2000, 'Too many cluster routes.'); $row['routes']=[];
+                        $cables=array_column($map[isset($map['nodes'])?'links':'cables']??[],'id');
+                        foreach ($g['routes'] as $cable=>$points) {self::uuid($cable);$route=self::route($points);if(in_array($cable,$cables,true))$row['routes'][$cable]=$route;}
+                    }
                 } else {
                     $row['width']=self::number($g['width']??null,6,24);
+                    if (array_key_exists('branches',$g)) {
+                        self::expect(is_array($g['branches']) && count($g['branches'])<=4000, 'Too many duct branches.'); $row['branches']=[];
+                        foreach ($g['branches'] as $branchKey=>$points) {
+                            self::expect(is_string($branchKey) && (bool)preg_match('/^(source|target|cluster-start|cluster-end):([a-f0-9-]{36})$/D',$branchKey,$parts), 'Invalid duct branch key.');
+                            self::uuid($parts[2]); $route=self::route($points);
+                            $validBranch=in_array($parts[1],['source','target'],true)?in_array($parts[2],$members,true):count(array_filter($input['clusters']??[],fn($c)=>($c['id']??null)===$parts[2] && ($c['context']??null)===$g['context']))>0;
+                            if($validBranch)$row['branches'][$branchKey]=$route;
+                        }
+                    }
+
                     self::expect(is_array($g['points']??null) && array_is_list($g['points']) && count($g['points'])>=2 && count($g['points'])<=100, 'Ducts need 2–100 route points.');
                     $row['points']=[];
                     foreach ($g['points'] as $p) {

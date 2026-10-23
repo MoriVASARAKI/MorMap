@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="{{ route('mormap.asset', ['file'=>'workbench.css']) }}?v={{ $mormapVersion }}">
 <link rel="stylesheet" href="{{ route('mormap.asset', ['file'=>'virtualization.css']) }}?v={{ $mormapVersion }}">
 <link rel="stylesheet" href="{{ route('mormap.asset', ['file'=>'diagram-groups.css']) }}?v={{ $mormapVersion }}">
+<link rel="stylesheet" href="{{ route('mormap.asset', ['file'=>'drawings.css']) }}?v={{ $mormapVersion }}">
 <div id="mormap" class="mormap-starting" data-shared="{{ route('mormap.home') }}" data-base="{{ $readOnly ? $viewerBase : route('mormap.home') }}" data-read-only="{{ $readOnly ? 'true' : 'false' }}" data-user="{{ $mormapUser ?? 'session' }}" data-csrf="{{ csrf_token() }}">
     @include('portmap::chrome', ['activeWorkspace'=>'logical', 'stateId'=>'mm-state'])
     <div class="mm-toolbar">
@@ -21,6 +22,7 @@
         <div class="mm-tool-group" role="group" aria-label="Add"><span class="mm-group-label">Add</span><div class="mm-group-buttons">
             <button id="mm-add">Device</button><button data-mode="anchor" class="mm-point-tool" title="Add connection point" aria-label="Add connection point">X</button><button data-mode="cable">Cable</button>
         </div></div>
+        <div class="mm-tool-group" role="group" aria-label="Draw"><span class="mm-group-label">Draw</span><div class="mm-group-buttons"><button data-mode="rectangle" aria-label="Draw rectangle">Rectangle</button><button data-mode="ellipse" aria-label="Draw ellipse">Ellipse</button><button data-mode="line" aria-label="Draw line">Line</button><button data-mode="arrow" aria-label="Draw arrow">Arrow</button><button data-mode="double-arrow" aria-label="Draw double-arrow">Double arrow</button><button data-mode="polygon" aria-label="Draw polygon">Polygon</button><button data-mode="text" aria-label="Draw text">Text</button></div></div>
         <div class="mm-tool-group" role="group" aria-label="Edit"><span class="mm-group-label">Edit</span><div class="mm-group-buttons">
             <button data-mode="select" class="active">Select</button><button id="mm-painter" class="mm-format-painter" type="button" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2 9 9-7 7-9-9Z" fill="#f2b33d" stroke="currentColor" stroke-width="1.2"/><path d="m6 9 9 9-2 2-9-9Z" fill="#dae4ec" stroke="currentColor" stroke-width="1.2"/><path d="m6 13-4 6a2 2 0 0 0 3 3l6-4Z" fill="#5785a7" stroke="currentColor" stroke-width="1.2"/><path d="m14 5 5 5m-7-3 5 5" stroke="#fff" stroke-width="1.2"/></svg>Format Painter</button><button id="mm-undo">Undo</button><button id="mm-redo">Redo</button><button id="mm-delete">Delete</button>
         </div></div>
@@ -80,6 +82,7 @@
 <script src="{{ route('mormap.asset', ['file'=>'virtualization.js']) }}?v={{ $mormapVersion }}" defer></script>
 <script src="{{ route('mormap.asset', ['file'=>'diagram-groups-model.js']) }}?v={{ $mormapVersion }}" defer></script>
 <script src="{{ route('mormap.asset', ['file'=>'diagram-groups.js']) }}?v={{ $mormapVersion }}" defer></script>
+<script src="{{ route('mormap.asset', ['file'=>'drawings.js']) }}?v={{ $mormapVersion }}" defer></script>
 <script src="{{ route('mormap.asset', ['file' => 'editor.js']) }}?v={{ $mormapVersion }}" defer></script>
 <link rel="stylesheet" href="{{ route('mormap.asset', ['file'=>'help.css']) }}?v={{ $mormapVersion }}">
 <script src="{{ route('mormap.asset', ['file'=>'help-content.js']) }}?v={{ $mormapVersion }}" defer></script>
