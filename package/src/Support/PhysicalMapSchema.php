@@ -153,7 +153,7 @@ final class PhysicalMapSchema
             $map['cables'][]=$c+self::commentBoxes($raw);
         }
         if (array_key_exists('vm_groups',$input)) $map['vm_groups']=VirtualizationLayout::validate($input['vm_groups']);
-        return $map;
+        return array_replace($map, DiagramGroups::validate($input,$map));
     }
     private static function reference(mixed $value,string $kind,bool $native=false): string
     {

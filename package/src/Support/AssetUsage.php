@@ -32,6 +32,7 @@ final class AssetUsage
                 }continue;
             }
             $physical=str_starts_with($path,'physical/');
+            foreach ($map['clusters']??[] as $cluster) if (($cluster['icon']??'')==='asset:'.$id) $uses[]=['workspace'=>$physical?'physical':'logical','map_id'=>$map['id'],'map_name'=>$map['name'].' · '.$cluster['name'].' icon','published'=>str_contains($path,'published/'),'device_ref'=>null,'label'=>$cluster['name']];
             if ($physical) foreach ($map['locations'] ?? [] as $location) if (($location['background']['image'] ?? null) === $id) $uses[] = ['workspace'=>'physical','map_id'=>$map['id'],'map_name'=>$map['name'].' · '.$location['name'].' background','published'=>str_contains($path,'published/'),'device_ref'=>null,'label'=>$location['name']];
             foreach($map[$physical?'equipment':'nodes']??[] as $d)if($d['image']===$id){
                 $positions=$physical?($d['ports']??[]):array_values(array_filter($map['anchors'],fn($a)=>$a['node_id']===$d['id']));
@@ -91,6 +92,7 @@ final class AssetUsage
                 if (!in_array($asset['mime'], ['image/png','image/jpeg','image/svg+xml'], true)) throw new \InvalidArgumentException('A floor background needs a PNG, JPG or SVG replacement.');
                 $map['locations'][$index]['background']['image']=$replacement;$changed=true;$count++;
             }
+            foreach ($map['clusters']??[] as $index=>$cluster) if (($cluster['icon']??'')==='asset:'.$id) {$map['clusters'][$index]['icon']='asset:'.$replacement;$changed=true;$count++;}
             if(!$changed)continue;
             if(!$physical){$nodes=array_column($map['nodes'],null,'id');$anchors=array_column($map['anchors'],null,'id');$point=static function($id)use($nodes,$anchors){$a=$anchors[$id];$n=$nodes[$a['node_id']];return ['x'=>$n['x']+$n['w']*$a['x'],'y'=>$n['y']+$n['h']*$a['y']];};foreach($map['links'] as &$link)$link['points']=self::attach($link['points'],$point($link['source']),$point($link['target']));unset($link);}
             $map['revision']++;$map['updated_at']=gmdate('c');$writes[$path]=$map;

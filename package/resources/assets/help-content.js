@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 const data={
-  "version": "1.1.3",
+  "version": "1.1.4",
   "groups": {
     "start": {
       "en": "Get started",
@@ -60,6 +60,83 @@ const data={
     }
   },
   "topics": [
+{
+  "id": "clusters-ducts",
+  "scopes": [
+    "logical",
+    "physical"
+  ],
+  "group": "build",
+  "tags": "cluster Proxmox Hyper-V ESXi KVM group duct bundle cables icon",
+  "related": [
+    "virtual-guests",
+    "save-documents"
+  ],
+  "en": {
+    "title": "Clusters and cable ducts",
+    "intro": "Group existing hosts and simplify cable routes without merging equipment, ports or connections.",
+    "sections": [
+      {
+        "title": "Create and arrange a cluster",
+        "steps": [
+          "Select hosts with Ctrl/Shift-click. Right-click → Create cluster… and choose members, a name, a color and an icon.",
+          "Use a built-in platform icon or import an image in Asset Library and select it under Cluster icon. Right-click the header → Cluster properties to edit the group.",
+          "Drag the header to move the group, whether expanded or collapsed. Relative host positions, internal cable routes and saved VM-group positions move together. External endpoints remain attached to their ports.",
+          "Click the chevron to collapse or expand. Ungroup hosts removes the group without deleting any host or connection. In Physical, groups belong to the current location/cabling view. Moving rack members changes their drawing placement, not their rack U allocation."
+        ]
+      },
+      {
+        "title": "Put cables into a duct",
+        "steps": [
+          "Select cables with Ctrl/Shift-click, then right-click → Create cable duct…. Select at least two cables and choose a name, color and width.",
+          "The shared duct route replaces the crowded middle of the drawing; branches remain attached to the real endpoints. Cable IDs, bindings, original routes and independent monitoring are retained.",
+          "Drag the duct to move its route. Select/right-click it to expose bend and segment handles. Drag the handles; use Add duct bend here or Remove duct bend for more control.",
+          "Click the duct label to show the original individual routes or bundle again. Right-click → View cables and status to inspect each member. Release all cables removes the duct without deleting its cables."
+        ]
+      },
+      {
+        "title": "Save, share and monitoring",
+        "steps": [
+          "Apply the dialog, then Save. Publish again to update the public and dashboard views. Undo/Redo includes group membership, movement and duct routing.",
+          "Published readers can expand/collapse clusters and ducts in their own view without writing changes to the saved map. Print/Export captures the current presentation.",
+          "Cluster colors identify groups. Host monitoring counts do not imply HA, quorum or replication health. Duct labels flag cables whose monitoring state needs review."
+        ]
+      }
+    ]
+  },
+  "fr": {
+    "title": "Clusters et gaines de câbles",
+    "intro": "Regroupez les hôtes et simplifiez les chemins de câbles en conservant chaque équipement, port et connexion.",
+    "sections": [
+      {
+        "title": "Créer et déplacer un cluster",
+        "steps": [
+          "Sélectionnez les hôtes avec Ctrl/Maj-clic. Clic droit → Create cluster… : choisissez les membres, le nom, la couleur et une icône.",
+          "Choisissez Proxmox, Hyper-V, ESXi, KVM ou une icône générique. Pour une icône personnalisée, importez une image dans Asset Library puis sélectionnez-la dans Cluster icon.",
+          "Déplacez le groupe par son en-tête, ouvert ou replié. Les positions relatives des hôtes, les chemins internes et les groupes de VMs enregistrés suivent le déplacement. Les autres extrémités des câbles restent attachées à leurs ports.",
+          "La flèche ouvre ou replie le groupe. Ungroup hosts conserve les hôtes et les câbles. Dans Physical, la position du dessin est propre à la vue ; le déplacement des hôtes en baie ne modifie pas leurs unités U."
+        ]
+      },
+      {
+        "title": "Regrouper les câbles dans une gaine",
+        "steps": [
+          "Sélectionnez les câbles avec Ctrl/Maj-clic puis clic droit → Create cable duct…. Choisissez au moins deux câbles, un nom, une couleur et une largeur.",
+          "La gaine représente un chemin commun avec des branches vers les vrais ports. Les identités, connexions, chemins individuels et états restent indépendants.",
+          "Déplacez la gaine ou ses poignées de segment et de coude. Le menu permet aussi Add duct bend here et Remove duct bend.",
+          "Cliquez sur son étiquette pour afficher les chemins individuels ou les regrouper. View cables and status détaille les membres. Release all cables libère les câbles sans les supprimer."
+        ]
+      },
+      {
+        "title": "Enregistrement et publication",
+        "steps": [
+          "Apply puis Save. Publiez de nouveau pour actualiser la carte publiée et le dashboard. Undo/Redo couvre les groupes et les gaines.",
+          "Dans une carte publiée, ouvrir ou replier un groupe change la vue locale sans modifier la publication. Les exports reprennent la présentation affichée.",
+          "La couleur du cluster est descriptive. Les compteurs des hôtes ne mesurent pas la santé HA ou le quorum. Une gaine signale les câbles dont l’état nécessite une vérification."
+        ]
+      }
+    ]
+  }
+},
 {
   "id": "virtual-guests",
   "scopes": [

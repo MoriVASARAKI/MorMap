@@ -65,14 +65,15 @@ function validate(map){
 }
 const portRef=p=>p.port_id?'lnms:port:'+Number(p.port_id):p.port_ref;
 const contextKey=(id,cabling=false)=>(cabling?'cabling:':'location:')+(id||'root');
+function groupProjection(map,id,cabling,result){const positions=map.cluster_positions?.[contextKey(id,cabling)]||{};for(const [key,p]of Object.entries(positions)){const b=result.boxes.get(key);if(b)result.boxes.set(key,{...b,x:p.x,y:p.y});}return result;}
 function projection(map,id,cabling=false){
  const standard=children(map,id),here=location(map,id),boxes=new Map(),panels=[];
- if(!cabling){for(const e of standard.equipment)boxes.set(e.id,box(map,e));if(here?.type==='rack')panels.push({rack:here,x:0,y:0});return {items:standard,boxes,panels,canvas:canvas(map,id)};}
+ if(!cabling){for(const e of standard.equipment)boxes.set(e.id,box(map,e));if(here?.type==='rack')panels.push({rack:here,x:0,y:0});return groupProjection(map,id,cabling,{items:standard,boxes,panels,canvas:canvas(map,id)});}
  const included=subtree(map,id),racks=map.locations.filter(l=>l.type==='rack'&&included.has(l.id)),equipment=map.equipment.filter(e=>included.has(e.parent_id));
  let y=0,maxY=0,maxX=0;for(let n=0;n<racks.length;n+=3){const row=racks.slice(n,n+3),height=Math.max(...row.map(r=>r.metadata.capacity*RACK.unit+160));
   row.forEach((rack,i)=>{const x=i*780;panels.push({rack,x,y});for(const e of equipment.filter(e=>e.parent_id===rack.id)){const b=rackBox(e,rack.metadata.capacity);boxes.set(e.id,{...b,x:b.x+x,y:b.y+y});}maxX=Math.max(maxX,x+760);});y+=height;maxY=y;}
  const loose=equipment.filter(e=>!boxes.has(e.id));loose.forEach((e,i)=>{const saved=map.cabling_positions?.[contextKey(id,true)]?.[e.id],x=saved?.x??(i%3)*600+80,yy=saved?.y??y+80+Math.floor(i/3)*360;boxes.set(e.id,{x,y:yy,w:e.w,h:e.h});maxX=Math.max(maxX,x+e.w+100);maxY=Math.max(maxY,yy+e.h+100);});
- return {items:{locations:[],equipment,shapes:[]},boxes,panels,canvas:{width:Math.max(1100,Math.ceil(maxX)),height:Math.max(600,Math.ceil(maxY))}};
+ return groupProjection(map,id,cabling,{items:{locations:[],equipment,shapes:[]},boxes,panels,canvas:{width:Math.max(1100,Math.ceil(maxX)),height:Math.max(600,Math.ceil(maxY))}});
 }
 function portItem(map,ref){for(const item of map.equipment){const port=(item.ports||[]).find(p=>portRef(p)===ref);if(port)return {item,port};}const record=map.infrastructure?.ports?.[ref],peer=map.infrastructure?.ports?.[record?.peer_id];if(peer?.peer_id===ref&&peer.device_ref===record.device_ref)for(const item of map.equipment){const front=(item.ports||[]).find(p=>portRef(p)===peer.id);if(front&&!item.hidden_ports?.includes(ref))return {item,port:{port_id:null,port_ref:ref,label:record.label,x:front.x,y:front.y},virtual:true};}return null;}
 function portPosition(map,ref,id,cabling=false,projected){const found=portItem(map,ref);if(!found)return null;const b=(projected||projection(map,id,cabling)).boxes.get(found.item.id);if(!b)return null;const im=imageBox(found.item,b),x=im.x+found.port.x*im.w,y=im.y+found.port.y*im.h,a=(found.item.rotation||0)*Math.PI/180;return {x:b.x+b.w/2+(x-b.w/2)*Math.cos(a)-(y-b.h/2)*Math.sin(a),y:b.y+b.h/2+(x-b.w/2)*Math.sin(a)+(y-b.h/2)*Math.cos(a)};}
@@ -80,6 +81,7 @@ function portPosition(map,ref,id,cabling=false,projected){const found=portItem(m
 // Legacy per-view paths remain in the document, so upgrading never deletes a route.
 function cableFrame(map,c,id,cabling=false){
  const key=contextKey(id,cabling),a=c&&portItem(map,c.source),b=c&&portItem(map,c.target),rack=a&&location(map,a.item.parent_id);
+ if(map.cluster_positions?.[key]?.[a?.item.id]||map.cluster_positions?.[key]?.[b?.item.id])return {key,x:0,y:0};
  if(!rack||rack.type!=='rack'||b?.item.parent_id!==rack.id)return {key,x:0,y:0};
  if(!cabling)return id===rack.id?{key:contextKey(rack.id),x:0,y:0,rack:rack.id}:{key,x:0,y:0};
  const included=subtree(map,id),racks=map.locations.filter(l=>l.type==='rack'&&included.has(l.id)),index=racks.findIndex(r=>r.id===rack.id);

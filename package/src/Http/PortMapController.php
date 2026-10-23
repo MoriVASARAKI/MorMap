@@ -35,7 +35,7 @@ final class PortMapController extends Controller
     }
     public function asset(string $file)
     {
-        abort_unless(in_array($file, ['virtualization.js','virtualization.css','port-details.js','floor-background.js','selection.js','physical-trace.js','physical-path-ui.js','topology.js','topology-controls.js','hierarchy-links.js','workbench.js','workbench.css','help-content.js','help.css','help.js','editor.js', 'format-painter.js', 'cable-style.js', 'cable-controls.js', 'port-mapping.js', 'geometry.js', 'display.js', 'navigation.js', 'editor.css', 'ui.js', 'library.js', 'library.css', 'physical.js', 'physical-model.js', 'physical.css', 'chrome.css', 'mormap-logo.png', 'output.js', 'output-model.js', 'output.css', 'jspdf.umd.min.js', 'svg2pdf.umd.min.js', 'export-font.ttf', 'export-font-bold.ttf', 'infrastructure.js', 'physical-cables.js', 'workspace.js', 'workspace.css', 'comments.js', 'mormap-logo.svg', 'mormap-icon.svg'], true), 404);
+        abort_unless(in_array($file, ['diagram-groups-model.js','diagram-groups.js','diagram-groups.css','virtualization.js','virtualization.css','port-details.js','floor-background.js','selection.js','physical-trace.js','physical-path-ui.js','topology.js','topology-controls.js','hierarchy-links.js','workbench.js','workbench.css','help-content.js','help.css','help.js','editor.js', 'format-painter.js', 'cable-style.js', 'cable-controls.js', 'port-mapping.js', 'geometry.js', 'display.js', 'navigation.js', 'editor.css', 'ui.js', 'library.js', 'library.css', 'physical.js', 'physical-model.js', 'physical.css', 'chrome.css', 'mormap-logo.png', 'output.js', 'output-model.js', 'output.css', 'jspdf.umd.min.js', 'svg2pdf.umd.min.js', 'export-font.ttf', 'export-font-bold.ttf', 'infrastructure.js', 'physical-cables.js', 'workspace.js', 'workspace.css', 'comments.js', 'mormap-logo.svg', 'mormap-icon.svg'], true), 404);
         return response()->file(dirname(__DIR__, 2) . '/resources/assets/' . $file, [
             'Content-Type' => match (pathinfo($file, PATHINFO_EXTENSION)) { 'css'=>'text/css', 'png'=>'image/png', 'svg'=>'image/svg+xml', 'ttf'=>'font/ttf', default=>'application/javascript' },
             'X-Content-Type-Options' => 'nosniff', 'Cache-Control' => 'private, no-cache']);
@@ -136,6 +136,7 @@ final class PortMapController extends Controller
         $map = Validator::make($request->all(), [
             'infrastructure_revision'=>'required|integer|min:1', 'disconnect'=>'sometimes|array|max:2000','disconnect.*'=>'required|uuid|distinct',
             'vm_groups' => 'sometimes|array|max:1000',
+            'clusters' => 'sometimes|array|max:500', 'ducts' => 'sometimes|array|max:500',
             'revision' => 'required|integer|min:1', 'schema' => 'required|integer|in:1', 'name' => 'required|string|max:120',
             'canvas' => 'sometimes|array:width,height|required_array_keys:width,height',
             'canvas.width' => 'required_with:canvas|integer|between:320,16384',
@@ -175,6 +176,7 @@ final class PortMapController extends Controller
             'links.*.points.*.x' => 'required|numeric|between:-100000,100000',
             'links.*.points.*.y' => 'required|numeric|between:-100000,100000',
         ] + self::commentRules())->validate();
+        try { $map=array_replace($map, \PortMap\LibreNMS\Support\DiagramGroups::validate($map,$map)); } catch (\InvalidArgumentException $e) { abort(422,$e->getMessage()); }
         if (array_key_exists('vm_groups',$map)) { try { $map['vm_groups']=\PortMap\LibreNMS\Support\VirtualizationLayout::validate($map['vm_groups']); } catch (\InvalidArgumentException $e) { abort(422,$e->getMessage()); } }
         foreach ($map['nodes'] as &$node) { try { $node += \PortMap\LibreNMS\Support\TopologySchema::ipVisibility($node); } catch (\InvalidArgumentException $e) { abort(422,$e->getMessage()); } if (array_key_exists('appearance',$node)) { try { $node['appearance']=\PortMap\LibreNMS\Support\ObjectFormat::validate($node['appearance']); } catch (\InvalidArgumentException $e) { abort(422,$e->getMessage()); } } }
         unset($node);
@@ -185,6 +187,7 @@ final class PortMapController extends Controller
         $devices = DB::table('devices')->whereIn('device_id', array_column($map['nodes'], 'device_id'))->pluck('device_id')->map(fn ($v) => (int) $v)->all();
         $ports = DB::table('ports')->whereIn('port_id', array_column($map['anchors'], 'port_id'))->where('deleted', 0)->pluck('device_id', 'port_id')->all();
         $library = new AssetLibrary();$graph=$this->infrastructure()->snapshot();
+        foreach (\PortMap\LibreNMS\Support\DiagramGroups::images($map) as $image) abort_unless($library->exists($image),422,'Cluster icon not found in the asset library.');
         foreach ($nodes as $node) {
             abort_unless(!empty($node['device_id'])?(in_array((int)$node['device_id'],$devices,true)||SavedInventory::device($before,$node)):isset($graph['devices'][InfrastructureStore::deviceRef($node)]),422,'Equipment no longer exists.');
             abort_unless($library->exists($node['image']), 422, 'Image not found in the asset library.');

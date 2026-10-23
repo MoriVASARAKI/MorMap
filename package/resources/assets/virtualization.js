@@ -186,6 +186,6 @@ window.MorMapVirtualization=function (a) {
  },true);
  function bounds(){const points=[];for(const item of a.visible()){const g=layout(Number(item.device_id));if(g.expanded&&visibleHost(item.device_id))points.push({x:g.x,y:g.y},{x:g.x+g.w,y:g.y+g.h});}return points;}
  function fitBounds(area){const points=bounds();if(!points.length)return area;const x=Math.min(area.x,...points.map(p=>p.x-30)),y=Math.min(area.y,...points.map(p=>p.y-30)),right=Math.max(area.x+area.w,...points.map(p=>p.x+30)),bottom=Math.max(area.y+area.h,...points.map(p=>p.y+30));return {x,y,w:right-x,h:bottom-y};}
- return {render,inspect,refresh,open,contextItems,bounds,fitBounds,dragging:()=>!!drag};
+ return {render,inspect,refresh,open,contextItems,bounds,fitBounds,count:hosts=>new Set(hosts.flatMap(h=>guests(h.device_id).map(g=>g.device_id))).size,dragging:()=>!!drag};
 };
 })();

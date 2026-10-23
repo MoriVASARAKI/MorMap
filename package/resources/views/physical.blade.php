@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="{{ route('mormap.asset', ['file'=>'workspace.css']) }}?v={{ $mormapVersion }}">
 <link rel="stylesheet" href="{{ route('mormap.asset', ['file'=>'workbench.css']) }}?v={{ $mormapVersion }}">
 <link rel="stylesheet" href="{{ route('mormap.asset', ['file'=>'virtualization.css']) }}?v={{ $mormapVersion }}">
+<link rel="stylesheet" href="{{ route('mormap.asset', ['file'=>'diagram-groups.css']) }}?v={{ $mormapVersion }}">
 <div id="mormap-physical" class="mormap-starting" data-base="{{ $readOnly ? $viewerBase : route('mormap.physical.home') }}" data-shared="{{ route('mormap.home') }}" data-read-only="{{ $readOnly ? 'true' : 'false' }}" data-user="{{ $mormapUser ?? 'session' }}" data-csrf="{{ csrf_token() }}">
     @include('portmap::chrome', ['activeWorkspace'=>'physical', 'stateId'=>'mp-state'])
     <div class="mp-toolbar">
@@ -55,6 +56,8 @@
 <script src="{{ route('mormap.asset', ['file'=>'physical-path-ui.js']) }}?v={{ $mormapVersion }}" defer></script>
 <script src="{{ route('mormap.asset', ['file'=>'floor-background.js']) }}?v={{ $mormapVersion }}" defer></script>
 <script src="{{ route('mormap.asset', ['file'=>'virtualization.js']) }}?v={{ $mormapVersion }}" defer></script>
+<script src="{{ route('mormap.asset', ['file'=>'diagram-groups-model.js']) }}?v={{ $mormapVersion }}" defer></script>
+<script src="{{ route('mormap.asset', ['file'=>'diagram-groups.js']) }}?v={{ $mormapVersion }}" defer></script>
 <script src="{{ route('mormap.asset', ['file' => 'physical.js']) }}?v={{ $mormapVersion }}" defer></script>
 <link rel="stylesheet" href="{{ route('mormap.asset', ['file'=>'help.css']) }}?v={{ $mormapVersion }}">
 <script src="{{ route('mormap.asset', ['file'=>'help-content.js']) }}?v={{ $mormapVersion }}" defer></script>

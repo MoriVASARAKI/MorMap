@@ -55,7 +55,7 @@ final class PublishedMapController extends Controller
     public function image(string $id, string $image)
     {
         $map = $this->map($id);
-        abort_unless(in_array($image, array_column($map['nodes'], 'image'), true), 404);
+        abort_unless(in_array($image, array_merge(array_column($map['nodes'], 'image'), \PortMap\LibreNMS\Support\DiagramGroups::images($map)), true), 404);
         return (new AssetLibrary())->response($image);
     }
 }

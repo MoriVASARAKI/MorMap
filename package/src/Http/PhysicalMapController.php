@@ -81,6 +81,7 @@ final class PhysicalMapController extends Controller
         foreach ($map['equipment'] as $device) { foreach ($device['ports'] as $port) { if(!empty($port['port_id']))$mappedPorts[$port['port_id']] = $device['device_id'];elseif(($graph['ports'][$port['port_ref']]['device_ref']??null)!==$device['object_id'])abort(422,'Physical port does not belong to its component.'); } }
         $portOwners = DB::table('ports')->whereIn('port_id', array_keys($mappedPorts))->where('deleted', 0)->pluck('device_id', 'port_id')->all();
         $assets = new AssetLibrary();
+        foreach (\PortMap\LibreNMS\Support\DiagramGroups::images($map) as $image) abort_unless($assets->exists($image),422,'Cluster icon not found in the asset library.');
         foreach (\PortMap\LibreNMS\Support\FloorBackground::images($map) as $image) {
             $background = $assets->get($image);
             abort_unless($background && in_array($background['mime'], ['image/png','image/jpeg','image/svg+xml'], true), 422, 'Choose a PNG, JPG or SVG floor background.');
@@ -142,7 +143,7 @@ final class PhysicalMapController extends Controller
     public function viewStatus(string $id) { $map=$this->map($id,true);return $this->statusResponse(array_column($map['equipment'],'device_id'),self::portRefs($map),$map); }
     public function viewImage(string $id, string $image)
     {
-        abort_unless(in_array($image, array_merge(array_column($this->map($id, true)['equipment'], 'image'), \PortMap\LibreNMS\Support\FloorBackground::images($this->map($id, true))), true), 404);
+        abort_unless(in_array($image, array_merge(array_column($this->map($id, true)['equipment'], 'image'), \PortMap\LibreNMS\Support\FloorBackground::images($this->map($id, true)), \PortMap\LibreNMS\Support\DiagramGroups::images($this->map($id, true))), true), 404);
         return (new AssetLibrary())->response($image);
     }
 }
