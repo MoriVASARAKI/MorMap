@@ -1,4 +1,4 @@
-# MorMap 1.1.2
+# MorMap 1.1.3
 
 MorMap is a LibreNMS plugin for logical network diagrams, physical location plans and reusable device images.
 
@@ -10,7 +10,7 @@ Run the following command as the `librenms` user from your LibreNMS installation
 lnms plugin:add morivasaraki/mormap
 ```
 
-The release tag for this package is `v1.1.2`. Upload the archive contents to the repository root so `composer.json` is at the top level, then create the tag. The command above installs this version after Packagist has indexed that tag.
+The release tag for this package is `v1.1.3`. Upload the archive contents to the repository root so `composer.json` is at the top level, then create the tag. The command above installs this version after Packagist has indexed that tag.
 
 Requirements: a working LibreNMS installation with its Composer plugin system, PHP 8.2 or later within PHP 8.x, and the PHP DOM and Fileinfo extensions. Composer resolves the required `librenms/plugin-interfaces` dependency. Open **MorMap** from the LibreNMS menu after installation.
 
@@ -26,10 +26,10 @@ The same package can be installed through `lnms` before a GitHub tag or Packagis
 
 Save drafts and close MorMap tabs. Back up `storage/app/mormap`, `composer.json`, `composer.lock`, and `composer.plugins.json` (if present). Keep the local source directory until switching back to the public release.
 
-For example, upload the ZIP to `/tmp/mormap-1.1.2.zip`. As root, extract it into a new directory readable by `librenms`:
+For example, upload the ZIP to `/tmp/mormap-1.1.3.zip`. As root, extract it into a new directory readable by `librenms`:
 
 ```bash
-unzip /tmp/mormap-1.1.2.zip -d /opt/mormap-1.1.2
+unzip /tmp/mormap-1.1.3.zip -d /opt/mormap-1.1.3
 su - librenms
 ```
 
@@ -37,19 +37,19 @@ As **librenms**:
 
 ```bash
 cd /opt/librenms
-php scripts/composer_wrapper.php config --global repositories.mormap-local '{"type":"path","url":"/opt/mormap-1.1.2","options":{"symlink":false,"versions":{"morivasaraki/mormap":"1.1.2"}}}'
-lnms plugin:add morivasaraki/mormap '^1.1.2'
+php scripts/composer_wrapper.php config --global repositories.mormap-local '{"type":"path","url":"/opt/mormap-1.1.3","options":{"symlink":false,"versions":{"morivasaraki/mormap":"1.1.3"}}}'
+lnms plugin:add morivasaraki/mormap '^1.1.3'
 php scripts/composer_wrapper.php show morivasaraki/mormap
 ```
 
-The final command must report **1.1.2**. Reopen MorMap and check **Help** for **1.1.2**. The paths above are examples; the archive does not need to be uploaded to `/root`. Extract the package once without mixing files from older releases. `composer.json` must be directly inside `/opt/mormap-1.1.2`.
+The final command must report **1.1.3**. Reopen MorMap and check **Help** for **1.1.3**. The paths above are examples; the archive does not need to be uploaded to `/root`. Extract the package once without mixing files from older releases. `composer.json` must be directly inside `/opt/mormap-1.1.3`.
 
-After the **v1.1.2** tag has been published and indexed by Packagist, switch back to the public repository as **librenms**:
+After the **v1.1.3** tag has been published and indexed by Packagist, switch back to the public repository as **librenms**:
 
 ```bash
 cd /opt/librenms
 php scripts/composer_wrapper.php config --global --unset repositories.mormap-local
-lnms plugin:add morivasaraki/mormap '^1.1.2'
+lnms plugin:add morivasaraki/mormap '^1.1.3'
 ```
 
 Check the installation output and `composer.lock` before removing the extracted directory: MorMap should now use a GitHub distribution rather than a local path. A global path repository takes precedence over Packagist while configured. Existing custom repositories for MorMap must also be reviewed if Composer selects an unexpected source.
@@ -84,7 +84,7 @@ Dashboard access follows LibreNMS's dashboard policy. Widget settings require pe
 
 MorMap stores maps, uploaded images, physical plans and infrastructure records under `storage/app/mormap` in the LibreNMS installation. Back up this directory and your LibreNMS Composer configuration and lock files before upgrading. Save drafts and close open MorMap editor tabs before replacing the installed version.
 
-Version 1.1.2 remains compatible with maps from 1.0.0–1.1.1, including route-cache recovery and menu error protection. The public package name is `morivasaraki/mormap`; the internal plugin identifier remains `portmap`, and existing `/plugin/mormap` URLs and storage paths are retained.
+Version 1.1.3 remains compatible with maps from 1.0.0–1.1.2, including route-cache recovery and menu error protection. The public package name is `morivasaraki/mormap`; the internal plugin identifier remains `portmap`, and existing `/plugin/mormap` URLs and storage paths are retained.
 
 When upgrading from 0.9.8 or earlier, the first infrastructure load separates Logical and Physical connections into schema 2 and retains the original graph in `infrastructure/graph-before-topology-v2.json`. Restoring a pre-0.9.9 release requires its matching pre-upgrade data backup. An existing custom Composer path repository may continue to select its local package; migrate that repository configuration before switching such an installation to the public package.
 
@@ -95,6 +95,11 @@ MorMap is licensed under the [MIT License](LICENSE). Bundled libraries and fonts
 Concept, design and development: **Morteza VASARAKI** — [GitHub](https://github.com/MoriVASARAKI).
 
 Official reference: [LibreNMS plugin packages](https://docs.librenms.org/Extensions/Plugin-System/).
+
+## 1.1.3 changes
+
+- Add a per-device checkbox beside Resolved IP in Logical and Physical Properties. Hidden IP labels stay hidden in published maps, dashboard widgets and exports.
+- Preserve existing IP display by default. Include the preference in Apply properties, Save and Undo/Redo without sharing it across maps.
 
 ## 1.1.2 changes
 
@@ -180,3 +185,7 @@ Official reference: [LibreNMS plugin packages](https://docs.librenms.org/Extensi
 - Provide an iframe snippet for the LibreNMS Notes dashboard widget, with selected text for manual copying when clipboard access is unavailable or denied.
 - Keep route-cache recovery and guarded menu rendering for the `mormap.home` route.
 - Update the Help version and English/French history instructions.
+
+### IP labels (1.1.3)
+
+Select a monitored device in Logical or Physical, then use the checkbox beside **Resolved IP** in Properties. Checked shows the IP on the map; unchecked hides that IP label. Click **Apply properties**, then **Save**. Publish the updated map to apply the setting to published views and LibreNMS dashboard widgets. The setting is per device placement and per map; existing maps keep showing IPs. Device names, inventory, connections and technical inspection details are unchanged. Undo/Redo includes the setting.

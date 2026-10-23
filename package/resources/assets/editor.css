@@ -38,3 +38,6 @@
 #mormap .mm-image-options{display:grid;grid-template-columns:1fr 120px;gap:12px;align-items:center;margin:10px 0}#mormap .mm-image-options img{width:120px;height:80px;object-fit:contain;background:#f1f6f8;border-radius:5px}#mormap .mm-binding-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-height:220px;overflow:auto;padding-right:4px}#mormap .mm-binding-grid label{margin:4px 0 2px;font-size:11px}#mormap .mm-binding-grid select{font-size:11px;width:100%;padding:5px}
 #mormap #mm-message.mm-warning{background:#fff3d9;color:#885913}
 .mm-context-menu{position:fixed;z-index:2147483000;min-width:180px;padding:5px;background:#fff;border:1px solid #c9d9e3;border-radius:7px;box-shadow:0 8px 28px #15354a33}.mm-context-menu button{display:block;width:100%;background:none;border:0;padding:9px 14px;text-align:left;color:#274657;font:13px system-ui;cursor:pointer}.mm-context-menu button:hover{background:#edf5f8}.mm-context-menu button:disabled{color:#9aa9b1;cursor:default}
+
+/* Per-device map label visibility. */
+#mormap .mm-ip-visibility{cursor:pointer}#mormap .mm-ip-visibility input{width:14px;height:14px;padding:0;margin:0 6px 0 0;vertical-align:middle;accent-color:#176d82}

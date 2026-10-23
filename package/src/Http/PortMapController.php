@@ -140,9 +140,10 @@ final class PortMapController extends Controller
             'canvas' => 'sometimes|array:width,height|required_array_keys:width,height',
             'canvas.width' => 'required_with:canvas|integer|between:320,16384',
             'canvas.height' => 'required_with:canvas|integer|between:240,16384',
-            'nodes' => 'present|array|max:200', 'nodes.*' => 'array:id,label,device_id,object_id,image,x,y,w,h,comment,comment_box,appearance,stack_member,profile_revision,hidden_ports',
+            'nodes' => 'present|array|max:200', 'nodes.*' => 'array:id,label,device_id,object_id,image,x,y,w,h,comment,comment_box,appearance,stack_member,profile_revision,hidden_ports,show_ip',
             'nodes.*.stack_member'=>'sometimes|integer|between:1,64','nodes.*.profile_revision'=>'sometimes|integer|min:0','nodes.*.hidden_ports'=>'sometimes|array|max:4000','nodes.*.hidden_ports.*'=>['string','regex:/^(?:lnms:port:[1-9][0-9]*|mm:port:[a-f0-9-]{36})$/D'],
             'nodes.*.appearance' => 'sometimes|array',
+            'nodes.*.show_ip' => 'sometimes|boolean',
             'nodes.*.id' => 'required|uuid|distinct', 'nodes.*.label' => 'required|string|max:120',
             'nodes.*.device_id' => 'nullable|integer|min:1', 'nodes.*.object_id'=>'sometimes|string|max:70', 'nodes.*.image' => 'required|string|max:150',
             'nodes.*.x' => 'required|numeric|between:-100000,100000', 'nodes.*.y' => 'required|numeric|between:-100000,100000',
@@ -175,7 +176,7 @@ final class PortMapController extends Controller
             'links.*.points.*.y' => 'required|numeric|between:-100000,100000',
         ] + self::commentRules())->validate();
         if (array_key_exists('vm_groups',$map)) { try { $map['vm_groups']=\PortMap\LibreNMS\Support\VirtualizationLayout::validate($map['vm_groups']); } catch (\InvalidArgumentException $e) { abort(422,$e->getMessage()); } }
-        foreach ($map['nodes'] as &$node) { if (array_key_exists('appearance',$node)) { try { $node['appearance']=\PortMap\LibreNMS\Support\ObjectFormat::validate($node['appearance']); } catch (\InvalidArgumentException $e) { abort(422,$e->getMessage()); } } }
+        foreach ($map['nodes'] as &$node) { try { $node += \PortMap\LibreNMS\Support\TopologySchema::ipVisibility($node); } catch (\InvalidArgumentException $e) { abort(422,$e->getMessage()); } if (array_key_exists('appearance',$node)) { try { $node['appearance']=\PortMap\LibreNMS\Support\ObjectFormat::validate($node['appearance']); } catch (\InvalidArgumentException $e) { abort(422,$e->getMessage()); } } }
         unset($node);
         try { \PortMap\LibreNMS\Support\TopologySchema::placements($map['nodes']); } catch (\InvalidArgumentException $e) { abort(422,$e->getMessage()); }
         $before=$this->store()->read($id);abort_if($before===null,404);$savedOwners=SavedInventory::portOwners($before);

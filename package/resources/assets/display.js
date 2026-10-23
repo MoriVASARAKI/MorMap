@@ -33,7 +33,8 @@ function portMarker(parent,{x,y,r,color,shape}){
  const half=r*1.3;for(const [extra,opacity]of [[r*.28,.12],[r*.12,.25]])parent.append(shape('rect',{x:x-half-extra,y:y-half-extra,width:2*(half+extra),height:2*(half+extra),rx:r*.15,fill:color,opacity,'pointer-events':'none','data-marker':'edge'}));
  parent.append(shape('rect',{x:x-half,y:y-half,width:half*2,height:half*2,rx:r*.1,fill:color,stroke:'#fff','stroke-width':r*.16,'pointer-events':'none','data-marker':'dot'}));
 }
+function deviceIpVisible(item,record){return item.show_ip!==false&&!!item.device_id&&!!record?.resolved_ip&&record.resolved_ip!=='Unavailable';}
 function deviceHint(record){return `System Name: ${record?.sysName||'Unavailable'}\nResolved IP: ${record?.resolved_ip||'Unavailable'}`;}
-const api={DEFAULT_CANVAS,canvas,device,port,pageView,palette,anchorRadius,portMarker,deviceHint};
+const api={DEFAULT_CANVAS,canvas,device,port,pageView,palette,anchorRadius,portMarker,deviceHint,deviceIpVisible};
 if(typeof module!=='undefined')module.exports=api;else root.MorMapDisplay=api;
 })(typeof window==='undefined'?globalThis:window);

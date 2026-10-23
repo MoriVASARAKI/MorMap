@@ -68,6 +68,7 @@ final class PhysicalMapSchema
             if(isset($raw['hidden_ports']))$item['hidden_ports']=array_map(fn($v)=>self::reference($v,'port',true),self::collection($raw['hidden_ports'],4000,'Hidden ports'));
             $item['width_mm'] = self::number($raw['width_mm']??482.6,50,482.6,'Equipment width');
             $item['rack_align'] = $raw['rack_align']??'center';self::expect(in_array($item['rack_align'],['left','center','right'],true),'Invalid rack alignment.');
+            $item += TopologySchema::ipVisibility($raw);
             $item['label'] = self::text($raw['label'] ?? null, 120, 'Equipment name', true);
             $item['image'] = self::text($raw['image'] ?? null, 100, 'Image ID', true);
             self::expect((bool) preg_match('/^(?:[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}|(?:symbol|stencil|logo)-[a-z0-9_-]{1,80})$/D', $item['image']), 'Invalid image ID.');

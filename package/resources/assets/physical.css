@@ -5,3 +5,6 @@
 .mp-binding-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;max-height:220px;overflow:auto}.mp-binding-grid .mp-prop{margin:0!important}.mp-binding-grid select{height:32px}.mp-port-row button{padding:3px 7px!important;font-size:11px}#mp-cabling[aria-pressed=true]{background:#176e83;color:#fff}.mp-port-bindings:empty{display:none}
 
 .mm-rack-order{flex:0 0 18px!important;width:18px!important;min-width:18px!important;padding:0!important;font-size:20px!important;line-height:24px!important;cursor:grab!important;color:#637e90!important;border:0!important;background:transparent!important}.mm-rack-order:active{cursor:grabbing!important}.mm-tree-row.is-drop-before{box-shadow:inset 0 2px #1683a6}.mm-tree-row.is-drop-after{box-shadow:inset 0 -2px #1683a6}.mm-rack-order.is-dragging{opacity:.45}
+
+/* Per-device map label visibility. */
+.mp-kv.mp-ip-visibility{grid-template-columns:112px 1fr}.mp-ip-visibility label{display:inline-flex;align-items:center;gap:6px;cursor:pointer}#mormap-physical .mp-ip-visibility input{width:14px;height:14px;padding:0;margin:0;accent-color:#176d82}

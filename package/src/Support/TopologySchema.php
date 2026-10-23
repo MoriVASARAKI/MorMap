@@ -5,6 +5,13 @@ namespace PortMap\LibreNMS\Support;
 /** Shared membership and cable metadata, independent of a drawing's coordinates. */
 final class TopologySchema
 {
+    /** Presentation preference belongs to this map placement, never the shared device. */
+    public static function ipVisibility(array $item): array
+    {
+        if (!array_key_exists('show_ip', $item)) return [];
+        if (!is_bool($item['show_ip'])) throw new \InvalidArgumentException('IP visibility must be true or false.');
+        return ['show_ip' => $item['show_ip']];
+    }
     /** Optional image-scoped Asset Library slot identity; old maps remain valid. */
     public static function assetKey(array $port): array
     {
