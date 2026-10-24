@@ -34,7 +34,7 @@ function contextMenu({x,y,items}){
  menu.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();closeMenu();return;}if(!['ArrowDown','ArrowUp','Home','End'].includes(e.key))return;e.preventDefault();e.stopPropagation();const buttons=[...menu.querySelectorAll('button:not(:disabled)')],i=buttons.indexOf(document.activeElement),next=e.key==='Home'?0:e.key==='End'?buttons.length-1:(i+(e.key==='ArrowUp'?-1:1)+buttons.length)%buttons.length;buttons[next]?.focus();});
  document.body.append(menu);const r=menu.getBoundingClientRect();menu.style.left=clamp(x,8,root.innerWidth-r.width-8)+'px';menu.style.top=clamp(y,8,root.innerHeight-r.height-8)+'px';menu.querySelector('button:not(:disabled)')?.focus();
 }
-document.addEventListener?.('pointerdown',e=>{if(menu&&!menu.contains(e.target))closeMenu();});
+document.addEventListener?.('pointerdown',e=>{if(menu&&!menu.contains(e.target))closeMenu();},true);
 document.addEventListener?.('keydown',e=>{if(e.key==='Escape')closeMenu();});
 document.addEventListener?.('keydown',e=>{
  if(e.key!=='Enter'||e.defaultPrevented||e.isComposing||e.repeat||e.altKey)return;

@@ -9,10 +9,19 @@ function sanitize(data){
  if(data.type==='object')return {type:'object',style:appearance(data.style)};
  if(data.type==='cable')return {type:'cable',style:{format:(root.MorMapCableStyle||(typeof require==='function'?require('./cable-style.js'):null)).normalize(data.style?.format),color:hex(data.style?.color)?data.style.color:null,...(['right-angle','straight','curved'].includes(data.style?.connector)?{connector:data.style.connector}:{})}};
  if(data.type==='info')return {type:'info',style:{font_size:clamp(data.style?.font_size,4,32,8)}};
- if(data.type==='shape')return {type:'shape',style:{fill:hex(data.style?.fill)?data.style.fill:'none',stroke:hex(data.style?.stroke)?data.style.stroke:'#5e7890',stroke_width:clamp(data.style?.stroke_width,0,20,2),font_size:clamp(data.style?.font_size,8,160,20)}};
+ if(data.type==='shape')return {type:'shape',style:shapeStyle(data.style)};
  if(data.type==='location')return {type:'location',style:{color:hex(data.style?.color)?data.style.color:'#c8e8f4'}};
  return null;
 }
+// Copy visual style only: identity, label text, position and view membership belong to the target.
+function shapeStyle(value={}){
+ const d=value.drawing||{},l=value.label||{},drawing={opacity:clamp(d.opacity,.05,1,1),corner_radius:clamp(d.corner_radius,0,500,2)};
+ for(const [key,choices,fallback]of [['dash',['solid','dashed','dotted'],'solid'],['text_align',['left','center','right'],'left'],['layer',['back','front'],'back']])drawing[key]=choices.includes(d[key])?d[key]:fallback;
+ for(const key of ['arrow_start','arrow_end','bold','italic'])drawing[key]=d[key]===true;
+ const label={position:['top-left','top-center','top-right','bottom-left','bottom-center','bottom-right','custom'].includes(l.position)?l.position:'top-left',x:clamp(l.x,-100000,100000,8),y:clamp(l.y,-100000,100000,-8),font_size:clamp(l.font_size,8,160,20),color:hex(l.color)?l.color:'#294d63',bold:l.bold===true};
+ return {fill:hex(value.fill)?value.fill:'none',stroke:hex(value.stroke)?value.stroke:'#5e7890',stroke_width:clamp(value.stroke_width,0,20,2),font_size:clamp(value.font_size,8,160,20),drawing,label};
+}
+function applyShape(target,value){const style=shapeStyle(value),text=target.label?.text||'';Object.assign(target,{fill:style.fill,stroke:style.stroke,stroke_width:style.stroke_width,font_size:style.font_size});target.drawing={...target.drawing,...style.drawing};target.label={...target.label,...style.label,text};}
 function controls(parent,{format={},image,label='Equipment'}){
  const U=root.MorMapUI,style=appearance(format),make=(tag,props={})=>Object.assign(document.createElement(tag),props),box=make('div',{className:'mm-object-format'}),preview=make('div',{className:'mm-object-preview'}),img=make('img',{src:image||'',alt:''}),caption=make('span',{textContent:label}),fields=make('div',{className:'mm-format-grid'});if(image)preview.append(img);preview.append(caption);box.append(preview,fields);parent.append(box);
  const field=(text,props)=>{const label=make('label'),span=make('span',{textContent:text}),input=make('input',props);input.setAttribute('aria-label',text);U.numberInput(input);label.append(span,input);fields.append(label);return input;};
@@ -38,5 +47,5 @@ function create({root:host,button,scope='',getSelection,getTargets=()=>[getSelec
  const items=target=>[{label:'Format Painter',group:'Appearance',action:()=>take(target)},{label:'Paste formatting',group:'Appearance',disabled:!formats().some(f=>f.type===target?.format?.type),action:()=>paint(target,true)}];
  refresh();return {active:()=>armed&&enabled(),recent:()=>Date.now()-paintedAt<450,cancel,refresh,paint,copy:take,items,kind:()=>clipboard?.type,picking:()=>picking};
 }
-const api={appearance,sanitize,controls,create};if(typeof module!=='undefined')module.exports=api;else root.MorMapFormatPainter=api;
+const api={appearance,sanitize,shapeStyle,applyShape,controls,create};if(typeof module!=='undefined')module.exports=api;else root.MorMapFormatPainter=api;
 })(typeof window==='undefined'?globalThis:window);
