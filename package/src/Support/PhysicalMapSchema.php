@@ -132,6 +132,7 @@ final class PhysicalMapSchema
             }
             self::expect($item['type'] !== 'polygon' || count($item['points']) >= 3, 'A polygon needs three or more points.');
             self::expect($item['type'] !== 'line' || count($item['points']) === 2, 'A line needs two endpoints.');
+            if (array_key_exists('label',$raw)) $item['label']=Drawings::label($raw['label']);
             if (array_key_exists('drawing',$raw)) $item['drawing']=Drawings::format($raw['drawing']);
             $map['shapes'][] = $item;
         }

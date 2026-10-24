@@ -23,7 +23,7 @@ window.MorMapVirtualization=function (a) {
  }
  function contextItems(item) {
   const id=Number(item?.device_id);
-  return id&&hypervisor(id)?[{label:'Show VMs',group:'Virtual machines',action:()=>toggle(id)}]:[];
+  if(!id||!visibleHost(id))return [];return [...(hypervisor(id)?[{label:'Show VMs',group:'Virtual machines',action:()=>toggle(id)}]:[]),{label:'Virtual machines & containers…',group:'Virtual machines',action:()=>open(id)}];
  }
  function button(parent,text,fn,attrs={}) {const b=html('button',text,{type:'button',...attrs});b.onclick=fn;parent.append(b);return b;}
  async function api(path='',method='GET',body) {
@@ -140,7 +140,7 @@ window.MorMapVirtualization=function (a) {
   const assignment=data.assignments.find(g=>g.device_id===Number(item.device_id));if(assignment)parent.append(html('p',(assignment.kind==='vm'?'VM':'CT')+' hosted by '+name(assignment.host_id),{class:'mv-hint'}));
  }
  function badge(parent,host,box) {
-  const rows=guests(host),vm=rows.filter(g=>g.kind==='vm').length,ct=rows.length-vm,review=needsReview(host),text=review?'Review VM assignments ('+rows.length+')':vm+' VM'+(vm===1?'':'s')+' · '+ct+' CT'+(ct===1?'':'s'),width=Math.max(112,text.length*7+20),g=shape('g',{'data-mv-ui':'','data-mv-host':host,'data-mv-action':'open',role:'button',tabindex:0,'aria-label':name(host)+' · '+text,style:'cursor:pointer'});
+  const rows=guests(host),vm=rows.filter(g=>g.kind==='vm').length,ct=rows.length-vm,review=needsReview(host),text=review?'Review VM assignments ('+rows.length+')':vm+' VM'+(vm===1?'':'s')+' · '+ct+' CT'+(ct===1?'':'s'),width=Math.max(112,text.length*7+20),g=shape('g',{'data-mv-ui':'','data-mv-host':host,'data-mv-action':'toggle',role:'button',tabindex:0,'aria-expanded':String(layout(host).expanded),'aria-label':name(host)+' · '+text,style:'cursor:pointer'});
   g.append(shape('rect',{x:box.x,y:box.y+box.h+10,width,height:24,rx:6,fill:review?'#fff4d6':'#e9f4fa',stroke:review?'#c58b22':'#82aabb','stroke-width':1}),shape('text',{x:box.x+10,y:box.y+box.h+26,'font-size':12,fill:review?'#805b12':'#275568'},text));parent.append(g);
  }
  function drawGroup(parent,host,box,g) {
@@ -177,7 +177,8 @@ window.MorMapVirtualization=function (a) {
  root.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.pointer)return;e.preventDefault();e.stopImmediatePropagation();const p=point(e),dx=p.x-drag.start.x,dy=p.y-drag.start.y;drag.moved=drag.moved||Math.hypot(dx,dy)>2;if(drag.resize){drag.value.w=clamp(drag.before.w+dx,280,800);drag.value.h=clamp(drag.before.h+dy,148,1400);}else{drag.value.x=clamp(drag.before.x+dx,-99000,99000);drag.value.y=clamp(drag.before.y+dy,-99000,99000);}redraw();},true);
  svg.addEventListener('lostpointercapture',e=>{if(drag?.pointer===e.pointerId){cancelDrag();redraw();}});
  const end=e=>{if(!drag||e.pointerId!==drag.pointer)return;e.stopImmediatePropagation();const current=drag;cancelDrag();if(e.type==='pointerup'&&current.moved)put(current.value);else redraw();};root.addEventListener('pointerup',end,true);root.addEventListener('pointercancel',end,true);
- root.addEventListener('click',e=>{const target=e.target.closest('[data-mv-ui]');if(!target)return;e.stopImmediatePropagation();const action=e.target.closest('[data-mv-action]');if(!action)return;const host=Number(action.dataset.mvHost);if(action.dataset.mvAction==='open')open(host);else changeLayout(host,g=>g.expanded=false);},true);
+ root.addEventListener('click',e=>{const target=e.target.closest('[data-mv-ui]');if(!target)return;e.stopImmediatePropagation();const action=e.target.closest('[data-mv-action]');if(!action)return;const host=Number(action.dataset.mvHost);if(action.dataset.mvAction==='open')open(host);else if(action.dataset.mvAction==='toggle')toggle(host);else changeLayout(host,g=>g.expanded=false);},true);
+ root.addEventListener('contextmenu',e=>{const target=e.target.closest('[data-mv-ui] [data-mv-host],[data-mv-ui][data-mv-host]');if(!target)return;e.preventDefault();e.stopImmediatePropagation();window.MorMapUI.contextMenu({x:e.clientX,y:e.clientY,items:contextItems({device_id:Number(target.dataset.mvHost)})});},true);
  root.addEventListener('dblclick',e=>{if(e.target.closest('[data-mv-ui]'))e.stopImmediatePropagation();},true);
  root.addEventListener('keydown',e=>{
   if(panel.contains(e.target)){if(e.key==='Escape'){e.preventDefault();close();}if(!((e.ctrlKey||e.metaKey)&&['s','z','y'].includes(e.key.toLowerCase())))e.stopPropagation();return;}

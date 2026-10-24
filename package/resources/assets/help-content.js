@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 const data={
-  "version": "1.1.5",
+  "version": "1.1.6",
   "groups": {
     "start": {
       "en": "Get started",
@@ -91,9 +91,9 @@ const data={
             "steps": [
               "Select cables with Ctrl/Shift-click, then right-click → Create cable duct…. Select at least two cables and choose a name, color and width.",
               "The shared duct route replaces the crowded middle of the drawing; branches remain attached to the real endpoints. Cable IDs, bindings, original routes and independent monitoring are retained.",
-              "Drag the duct to move its route. Select/right-click it to expose bend and segment handles. Drag the handles; use Add duct bend here or Remove duct bend for more control.",
+              "Drag the duct to move its route. Right-click → Edit duct route to expose bend and segment handles. Drag the handles; use Add duct bend here or Remove duct bend for more control.",
               "Click a branch or a cable at a collapsed cluster to reveal its own route handles. Drag a segment/bend or right-click → Add route bend here. Reset this displayed route removes that manual route. Collapsed cluster cables share one branch; actual switch ports stay separate.",
-              "Click the duct label to show the original individual routes or bundle again. Right-click → View cables and status to inspect each member. Release all cables removes the duct without deleting its cables."
+              "Click the duct body to show the original individual routes or bundle again. Right-click → View cables and status to inspect each member. Delete duct removes only the duct; original cable routes and connections stay intact. Right-click → Edit duct route exposes endpoints, corners and segments. Redraw duct route lets you click successive waypoints; Shift chooses vertical-first, Backspace removes the last point, Enter finishes and Esc cancels."
             ]
           },
           {
@@ -101,7 +101,7 @@ const data={
             "steps": [
               "Apply the dialog, then Save. Publish again to update the public and dashboard views. Undo/Redo includes group membership, movement and duct routing.",
               "Published readers can expand/collapse clusters and ducts in their own view without writing changes to the saved map. Print/Export captures the current presentation.",
-              "Cluster colors identify groups. Host monitoring counts do not imply HA, quorum or replication health. Duct labels flag cables whose monitoring state needs review."
+              "Cluster colors identify groups. Host monitoring counts do not imply HA, quorum or replication health. View cables and status lists the monitoring state of each duct member."
             ]
           }
         ]
@@ -127,7 +127,7 @@ const data={
               "La gaine représente un chemin commun avec des branches vers les vrais ports. Les identités, connexions, chemins individuels et états restent indépendants.",
               "Déplacez la gaine ou ses poignées de segment et de coude. Le menu permet aussi Add duct bend here et Remove duct bend.",
               "Cliquez sur une branche ou un câble d’un cluster replié pour afficher ses poignées. Déplacez un segment ou un coude ; Add route bend here ajoute un coude, Reset this displayed route réinitialise ce chemin. Un cluster replié utilise une branche commune, les vrais ports du switch restent distincts.",
-              "Cliquez sur son étiquette pour afficher les chemins individuels ou les regrouper. View cables and status détaille les membres. Release all cables libère les câbles sans les supprimer."
+              "Cliquez sur le corps du conduit pour afficher les chemins individuels ou les regrouper. View cables and status détaille les membres. Delete duct retire uniquement le conduit ; les chemins et connexions des câbles restent intacts. Edit duct route affiche les poignées. Redraw duct route permet de cliquer les points successifs : Shift choisit le coude vertical, Backspace retire le dernier point, Enter termine et Esc annule."
             ]
           },
           {
@@ -135,7 +135,7 @@ const data={
             "steps": [
               "Apply puis Save. Publiez de nouveau pour actualiser la carte publiée et le dashboard. Undo/Redo couvre les groupes et les gaines.",
               "Dans une carte publiée, ouvrir ou replier un groupe change la vue locale sans modifier la publication. Les exports reprennent la présentation affichée.",
-              "La couleur du cluster est descriptive. Les compteurs des hôtes ne mesurent pas la santé HA ou le quorum. Une gaine signale les câbles dont l’état nécessite une vérification."
+              "La couleur du cluster est descriptive. Les compteurs des hôtes ne mesurent pas la santé HA ou le quorum. View cables and status détaille l’état de supervision des câbles de la gaine."
             ]
           }
         ]
@@ -163,7 +163,7 @@ const data={
               "Select the hypervisor device. Open Properties → Virtual machines / containers → Assign LibreNMS devices.",
               "Hosts and guests must have a server-compatible OS and device type in LibreNMS. Switches and incompatible or unidentified devices are unavailable, with the reason shown. Membership remains manual: select only the actual guests of this hypervisor. Old incompatible assignments display Review VM assignments; use Unlink to remove them or move a valid guest to the correct host. Undo remains available.",
               "Search LibreNMS, select the guests, choose VM or CT and optionally enter a VMID. Apply the selection. A guest already assigned elsewhere shows the host it will move from.",
-              "Right-click a recognized hypervisor and choose Show VMs to expand or collapse its guest group on the map. This also works in published maps and dashboard widgets, where changes affect only the current view. The group keeps its saved position. Click the host badge to open the guest list. Guest names display their LibreNMS OS icons. Filter VMs / CTs or search by name, VMID, OS and IP. Status is the LibreNMS monitoring state, not the guest power state."
+              "Right-click a recognized hypervisor and choose Show VMs to expand or collapse its guest group on the map. This also works in published maps and dashboard widgets, where changes affect only the current view. The group keeps its saved position. Click the host badge to show or hide the guest group on the map. Right-click → Virtual machines & containers… opens the management panel. Guest names display their LibreNMS OS icons. Filter VMs / CTs or search by name, VMID, OS and IP. Status is the LibreNMS monitoring state, not the guest power state."
             ]
           },
           {
@@ -189,7 +189,7 @@ const data={
               "Sélectionnez l’hyperviseur, puis Properties → Virtual machines / containers → Assign LibreNMS devices.",
               "L’OS et le type de périphérique LibreNMS doivent correspondre à un serveur. Les commutateurs et les périphériques incompatibles ou non identifiés sont indisponibles, avec le motif affiché. L’association reste manuelle : sélectionnez les véritables invités de cet hôte. Les anciennes associations incompatibles portent la mention Review VM assignments. Utilisez Unlink ou réaffectez un invité valide à son hôte correct ; Undo reste disponible.",
               "Recherchez et sélectionnez les invités, choisissez VM ou CT et renseignez éventuellement le VMID. Validez. Un invité déjà associé affiche son hyperviseur précédent avant le déplacement.",
-              "Faites un clic droit sur un hyperviseur reconnu et choisissez Show VMs pour afficher ou masquer son groupe sur la carte, à sa position enregistrée. Cela fonctionne aussi dans les publications et les widgets du dashboard, uniquement pour la vue courante. Le badge ouvre la liste des invités. Les noms affichent leur icône de système LibreNMS. Filtrez par VM / CT, système ou IP. L’état provient de la supervision LibreNMS, pas de l’alimentation de la VM."
+              "Faites un clic droit sur un hyperviseur reconnu et choisissez Show VMs pour afficher ou masquer son groupe sur la carte, à sa position enregistrée. Cela fonctionne aussi dans les publications et les widgets du dashboard, uniquement pour la vue courante. Le badge affiche ou masque le groupe des invités sur la carte. Clic droit → Virtual machines & containers… ouvre le panneau de gestion. Les noms affichent leur icône de système LibreNMS. Filtrez par VM / CT, système ou IP. L’état provient de la supervision LibreNMS, pas de l’alimentation de la VM."
             ]
           },
           {
@@ -993,6 +993,7 @@ const data={
           {
             "title": "Refine the result",
             "steps": [
+              "In Properties, Label names a shape. Choose top-left/center/right or bottom-left/center/right, or drag the label freely. Custom offsets, font size, color and bold are available; the label follows the shape and is retained in published maps and exports.",
               "Select a drawing. Drag any of its eight handles to resize, including after rotation, or enter X/Y, width, height and rotation in Properties.",
               "Set fill, outline width, dash, opacity and corner radius. Text supports multiple lines, size, bold, italic and alignment.",
               "Ctrl/Cmd/Shift-click drawings to select several. Arrange drawings aligns them or distributes three or more with equal gaps. Duplicate drawings or Ctrl/Cmd+D creates copies. Bring to front / Send to back changes their layer.",
@@ -1007,7 +1008,7 @@ const data={
             "title": "Organize cable routes",
             "steps": [
               "Right-click a cable → Parallel cable routes… Select cables, direction, spacing and corridor position; inspect the preview before Apply. Real cable IDs and port connections stay unchanged.",
-              "Select a duct or collapsed-cluster cable to move its handles, or right-click a segment for an exact position. Duct branches can be edited separately from the shared trunk."
+              "Right-click a duct → Edit duct route, or select a collapsed-cluster cable, to move its handles, or right-click a segment for an exact position. Duct branches can be edited separately from the shared trunk."
             ]
           }
         ]
@@ -1016,6 +1017,7 @@ const data={
         "title": "Dessiner salles, formes et libellés",
         "intro": "Les mêmes outils de dessin sont disponibles dans Logical et Physical, y compris les vues Cabling.",
         "sections": [
+          {"title":"Label", "steps":["Dans Properties, Label nomme la forme. Choisissez une des six positions en haut ou en bas, ou glissez le libellé librement. Les décalages, la taille, la couleur et le gras sont réglables. Le libellé suit la forme et reste visible dans les publications et exports."]},
           {
             "title": "Outils de dessin",
             "table": {

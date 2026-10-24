@@ -347,7 +347,7 @@ function physicalExportSource(options={}){
  if(!S.map)throw Error('Select a physical plan first.');const saved={current:S.current,selected:S.selected,multi:S.multi,view:{...S.view},draft:S.draft,polygon:S.polygon,cabling:S.cabling,cableSelected:S.cableSelected};
  const ids=options.allLocations?[null,...S.map.locations.map(l=>l.id)]:[S.current],result=[];
  try{S.selected=null;S.cableSelected=null;S.multi=[];S.draft=null;S.polygon=[];if(options.allLocations)S.cabling=false;for(const id of ids){S.current=id;renderCanvas();const page=currentPage(),here=M.location(S.map,id),items=currentProjection().items,comments=[];
- for(const item of [...items.locations,...items.equipment,...items.shapes]){if(item.comment)comments.push({name:item.name||item.label||item.type,text:item.comment});for(const p of item.ports||[])if(p.comment)comments.push({name:item.label+' / '+p.label,text:p.comment});}
+ for(const item of [...items.locations,...items.equipment,...items.shapes]){if(item.comment)comments.push({name:item.name||(typeof item.label==='string'?item.label:item.label?.text)||item.type,text:item.comment});for(const p of item.ports||[])if(p.comment)comments.push({name:item.label+' / '+p.label,text:p.comment});}
  for(const c of S.map.cables||[])if(c.comment&&C.path(c))comments.push({name:c.name||'Cable',text:c.comment});
  result.push({svg:window.MorMapOutput.capture(svg),map:copy(S.map),page:{x:0,y:0,w:page.width,h:page.height},view:saved.view,name:S.map.name,subtitle:here?M.path(S.map,id).map(l=>l.name).join(' / '):'Site overview',comment:(here||S.map).comment||'',comments,allLocations:true});}}
  finally{Object.assign(S,saved);renderCanvas();}return options.allLocations?result:result[0];
